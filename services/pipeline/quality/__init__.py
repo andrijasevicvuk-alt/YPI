@@ -1,0 +1,1 @@
+"""Quality scoring step placeholder."""
