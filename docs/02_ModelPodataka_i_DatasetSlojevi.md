@@ -1,14 +1,14 @@
 # Model podataka i dataset slojevi
 
-## 1. Načelo
-Dataset nije jedna CSV tablica, nego skup povezanih slojeva koji služe različitim namjenama.
+## 1. Nacelo
+Dataset nije jedna CSV tablica, nego skup povezanih slojeva koji sluze razlicitim namjenama.
 
-## 2. Predloženi logički slojevi
+## 2. Predlozeni logicki slojevi
 
 ### 2.1 Raw ingestion dataset
-Sadrži što je izvor stvarno dao.
+Sadrzi sto je izvor stvarno dao.
 
-Predložena polja:
+Predlozena polja:
 - raw_record_id
 - source_site_id
 - source_listing_key
@@ -32,7 +32,7 @@ Svrha:
 - usporedba parser verzija
 
 ### 2.2 Normalized boat dataset
-Sadrži kanonsku reprezentaciju plovila.
+Sadrzi kanonsku reprezentaciju plovila.
 
 Polja:
 - boat_id
@@ -124,13 +124,13 @@ Za stabilan cleaning trebaju i lookup / mapping tablice:
 ## 4. Dataset flow
 Raw -> Parsed -> Normalized -> Deduped -> Valuation-ready -> UI/API
 
-To znači:
+To znaci:
 - raw dataset nikad ne ide direktno u scoring
-- UI ne čita raw tablice
+- UI ne cita raw tablice
 - valuation engine radi samo nad normaliziranim i filtriranim zapisima
 
 ## 5. Valuation-ready view
-Predloženi output za scoring i UI:
+Predlozeni output za scoring i UI:
 
 - comparable_id
 - boat_id
@@ -155,17 +155,46 @@ Predloženi output za scoring i UI:
 Zapis ulazi u valuation-ready view samo ako:
 - ima builder i model
 - ima cijenu i valutu
-- cijena je uspješno normalizirana
+- cijena je uspjesno normalizirana
 - godina je poznata ili razumno izvedena
-- listing nije duplicate ili očito neispravan
+- listing nije duplicate ili ocito neispravan
 - quality score je iznad minimalnog praga
 
-## 7. Zašto je ova struktura bitna za web app
-Web app mora moći:
+## 7. Zasto je ova struktura bitna za web app
+Web app mora moci:
 - brzo filtrirati
-- pokazati razlog zašto je rezultat uključen
+- pokazati razlog zasto je rezultat ukljucen
 - pokazati trag izvora
 - objasniti fallback
 - ne lomiti se zbog prljavih raw podataka
 
-Zato aplikacija i scoring motor ne smiju ovisiti o neobrađenim izvorima.
+Zato aplikacija i scoring motor ne smiju ovisiti o neobradenim izvorima.
+
+## 8. Trenutna MVP schema nakon Step 3
+Step 3 sada uvodi minimalni normalized core schema koji ostaje uskladen s pravilom `raw -> normalized -> valuation-ready`.
+
+Dodane normalized core tablice:
+- `boats`
+- `engines`
+- `listings`
+- `price_history`
+- `worker_notes`
+
+Dodane rane mapping/reference tablice:
+- `boat_builders`
+- `builder_aliases`
+- `boat_models`
+- `model_aliases`
+- `boat_variants`
+- `variant_aliases`
+- `ownership_statuses`
+- `ownership_status_aliases`
+- `countries`
+- `country_aliases`
+- `location_regions`
+- `location_aliases`
+
+Bitan lineage detalj:
+- `listings.raw_listing_id` veze normalized listing natrag na raw zapis
+- manual entry jos uvijek prvo puni `raw_listings` i `worker_manual_entries`
+- normalized tablice postoje kao publication cilj, ali ih Step 3 jos ne puni automatski

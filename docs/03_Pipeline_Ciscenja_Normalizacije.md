@@ -158,3 +158,31 @@ Pipeline mora na kraju dati:
 - duplicate status
 - eligibility flag
 - exclusion reason ako zapis nije spreman za valuation
+
+## 7. Trenutni status implementacije
+Step 3 uvodi ugovore, ali ne i punu logiku pipelinea.
+
+Trenutno postoje:
+- `services/pipeline/contracts.py`
+- `services/pipeline/extract`
+- `services/pipeline/normalizers`
+- `services/pipeline/validators`
+- `services/pipeline/publish`
+
+Ti ugovori definiraju:
+- ulazni `RawListingEnvelope`
+- `Extractor` za field extraction
+- `Normalizer` za prijelaz u normalized candidate objekte
+- `Validator` za business i quality provjere
+- `Publisher` za upis u normalized core tablice
+
+## 8. Trenutni operativni boundary nakon Step 3
+Manual entry sada puni raw sloj kroz aplikaciju, ali publication ostaje odvojen.
+
+Aktivni tok:
+1. worker unese zapis kroz app
+2. payload se sprema u `raw_listings` i `worker_manual_entries`
+3. record ostaje u `pending` statusu
+4. sljedeca faza ce napraviti extraction -> normalization -> validation -> publication
+
+Time ostaje ocuvano glavno pravilo projekta da raw podaci ne idu direktno u normalized ili valuation-ready sloj bez kontrolirane obrade.
