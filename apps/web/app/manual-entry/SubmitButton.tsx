@@ -7,7 +7,7 @@ export function SubmitButton() {
 
   return (
     <button className="primary-button" type="submit" disabled={pending}>
-      {pending ? "Spremanje u raw ingestion..." : "Spremi ručni unos"}
+      {pending ? "Spremanje u sirovi sloj..." : "Spremi ručni unos"}
     </button>
   );
 }

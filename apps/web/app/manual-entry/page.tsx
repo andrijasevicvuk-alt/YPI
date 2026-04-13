@@ -3,14 +3,14 @@ import type { Metadata } from "next";
 import { ManualEntryForm } from "./ManualEntryForm";
 
 export const metadata: Metadata = {
-  title: "Ručni unos | YPI",
-  description: "Interni ručni unos koji prvo zapisuje podatke u raw ingestion sloj."
+  title: "Admin ručni unos | YPI",
+  description: "Bootstrap/admin ručni unos koji prvo zapisuje podatke u sirovi ingestion sloj."
 };
 
 const flowSteps = [
   {
-    title: "1. Radnik unosi sirove podatke",
-    body: "Forma prima naslov, builder, model, cijenu, lokaciju i interne bilješke bez pokušaja direktnog kanonskog mapiranja."
+    title: "1. Admin dodaje bootstrap zapis",
+    body: "Forma služi za kontrolirane iznimke, testne primjere ili privremeni unos prije stabilnog scrapinga."
   },
   {
     title: "2. Aplikacija zapisuje u raw sloj",
@@ -26,13 +26,13 @@ export default function ManualEntryPage() {
   return (
     <main className="page-shell">
       <section className="hero-card">
-        <p className="eyebrow">Korak 3</p>
-        <h1>Ručni unos prvo ide u raw ingestion.</h1>
+        <p className="eyebrow">Bootstrap / admin alat</p>
+        <h1>Ručni unos je pomoćni put, ne glavni proizvod.</h1>
         <p className="lede">
-          Ovo je interni radnicki obrazac za prvi garantirani ulazni put. Zapis se
-          namjerno ne sprema direktno u `boats`, `engines` ili `listings`, nego
-          prvo u raw sloj prilagoden auditu, s jasnim tragom izvora i porijeklom
-          rucnog unosa.
+          Ova ruta postoji za bootstrap podatke, kontrolirane iznimke i admin
+          provjere dok se glavni tržišni dataset puni scrapingom marketplace i
+          broker izvora. Zapis se i dalje namjerno sprema prvo u sirovi sloj, a
+          ne direktno u `boats`, `engines` ili `listings`.
         </p>
       </section>
 

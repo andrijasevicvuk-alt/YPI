@@ -1,18 +1,18 @@
 const workstreams = [
   {
-    title: "Manual Entry",
-    href: "/manual-entry",
-    description: "The first guaranteed acquisition path for controlled market data."
-  },
-  {
-    title: "CSV Import",
-    href: "/csv-import",
-    description: "A secondary ingestion path for controlled tabular inputs without assuming an external dataset."
-  },
-  {
-    title: "Valuation-Ready Architecture",
+    title: "Search i usporedba",
     href: "/architecture",
-    description: "The system is organized around raw, normalized, and valuation-ready layers."
+    description: "Glavni proizvod radi nad valuation-ready podacima: unos plovila, usporedbe, raspon cijene i objašnjenje."
+  },
+  {
+    title: "Ručni unos",
+    href: "/manual-entry",
+    description: "Bootstrap/admin alat za kontrolirane iznimke. Ne predstavlja glavni product flow."
+  },
+  {
+    title: "CSV uvoz",
+    href: "/csv-import",
+    description: "Bootstrap/admin alat za kontrolirane tablične ulaze, ne primarni izvor tržišnih podataka."
   }
 ];
 
@@ -21,11 +21,13 @@ export default function HomePage() {
     <main className="page-shell">
       <section className="hero-card">
         <p className="eyebrow">Yacht Premium Insurance</p>
-        <h1>Controlled ingestion first, scraping later.</h1>
+        <h1>Search i usporedba mediteranskih cijena brodova.</h1>
         <p className="lede">
-          This scaffold is intentionally data-first. Manual entry works first,
-          CSV import stays available as a controlled fallback, and pilot
-          marketplace or broker scraping is prepared as a later phase.
+          Glavni proizvod je search and comparison UI nad valuation-ready
+          datasetom: korisnik unosi plovilo, sustav dohvaća usporedive oglase,
+          računa branljiv raspon cijene i objašnjava rezultat. Scraping
+          marketplace i broker izvora je primarni način akvizicije podataka, dok
+          su ručni unos i CSV uvoz samo bootstrap/admin alati.
         </p>
       </section>
 

@@ -2,10 +2,11 @@
 
 import { useActionState } from "react";
 
+import { submitManualEntryAction } from "./actions";
 import {
   initialManualEntryFormState,
-  submitManualEntryAction
-} from "./actions";
+  normalizeManualEntryFormState
+} from "./form-state";
 import { SubmitButton } from "./SubmitButton";
 
 function FieldError({ message }: { message?: string }) {
@@ -17,22 +18,23 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export function ManualEntryForm() {
-  const [state, formAction] = useActionState(
+  const [rawState, formAction] = useActionState(
     submitManualEntryAction,
     initialManualEntryFormState
   );
+  const state = normalizeManualEntryFormState(rawState);
 
   return (
     <form className="panel manual-entry-form" action={formAction}>
       <div className="form-intro">
         <div>
-          <p className="eyebrow">Interni unos</p>
-          <h2>Pošalji zapis u raw ingestion</h2>
+          <p className="eyebrow">Admin unos</p>
+          <h2>Pošalji bootstrap zapis u sirovi ingestion sloj</h2>
         </div>
         <p className="helper-copy">
-          Ovaj obrazac ne upisuje podatke direktno u normalizirane poslovne
-          tablice. Svaki unos prvo stvara `ingest_run`, `raw_listing` i zapis u
-          `worker_manual_entries`.
+          Ovaj obrazac je pomoćni admin alat. Ne zamjenjuje scraping i ne upisuje
+          podatke direktno u normalizirane poslovne tablice. Svaki unos prvo
+          stvara `ingest_run`, `raw_listing` i zapis u `worker_manual_entries`.
         </p>
       </div>
 
@@ -44,7 +46,7 @@ export function ManualEntryForm() {
           Metoda: <strong>manual_entry</strong>
         </div>
         <div className="status-chip">
-          Odrediste: <strong>raw ingestion sloj</strong>
+          Odredište: <strong>sirovi ingestion sloj</strong>
         </div>
       </div>
 
@@ -118,20 +120,20 @@ export function ManualEntryForm() {
             type="text"
             required
             defaultValue={state.values.title}
-            placeholder="npr. Lagoon 42 Owner Version"
+            placeholder="npr. Lagoon 42 vlasnička verzija"
           />
           <small>Ovo je minimalni signal za kasniju ekstrakciju i mapiranje.</small>
           <FieldError message={state.fieldErrors.title} />
         </label>
 
         <label className="field">
-          <span>Builder</span>
+          <span>Builder / graditelj</span>
           <input
             name="builder"
             type="text"
             required
             defaultValue={state.values.builder}
-            placeholder="Lagoon"
+            placeholder="npr. Lagoon"
           />
           <small>Unesite kako je zapis trenutno poznat.</small>
           <FieldError message={state.fieldErrors.builder} />
@@ -144,7 +146,7 @@ export function ManualEntryForm() {
             type="text"
             required
             defaultValue={state.values.model}
-            placeholder="42"
+            placeholder="npr. 42"
           />
           <small>Model ostaje sirov signal dok ga pipeline ne mapira.</small>
           <FieldError message={state.fieldErrors.model} />
@@ -156,7 +158,7 @@ export function ManualEntryForm() {
             name="variant"
             type="text"
             defaultValue={state.values.variant}
-            placeholder="Owner Version"
+            placeholder="npr. vlasnička verzija"
           />
           <small>Opcionalno, ako varijanta pomaže razlikovanju modela.</small>
           <FieldError message={state.fieldErrors.variant} />
@@ -169,7 +171,7 @@ export function ManualEntryForm() {
             type="text"
             inputMode="numeric"
             defaultValue={state.values.yearBuilt}
-            placeholder="2019"
+            placeholder="npr. 2019"
           />
           <small>Ako nije sigurno, ostavite prazno umjesto nagađanja.</small>
           <FieldError message={state.fieldErrors.yearBuilt} />
@@ -183,7 +185,7 @@ export function ManualEntryForm() {
             inputMode="decimal"
             required
             defaultValue={state.values.askingPrice}
-            placeholder="450000"
+            placeholder="npr. 450000"
           />
           <small>Spremamo izvorni unos prije normalizacije valute.</small>
           <FieldError message={state.fieldErrors.askingPrice} />
@@ -197,7 +199,7 @@ export function ManualEntryForm() {
             required
             maxLength={3}
             defaultValue={state.values.currency}
-            placeholder="EUR"
+            placeholder="npr. EUR"
           />
           <small>Troslovni ISO kod, npr. EUR ili USD.</small>
           <FieldError message={state.fieldErrors.currency} />
@@ -210,14 +212,14 @@ export function ManualEntryForm() {
             type="text"
             required
             defaultValue={state.values.location}
-            placeholder="Hrvatska / Split"
+            placeholder="npr. Hrvatska / Split"
           />
           <small>Država, regija, marina ili grad kako ih trenutno znate.</small>
           <FieldError message={state.fieldErrors.location} />
         </label>
 
         <label className="field">
-          <span>Status vlasnistva</span>
+          <span>Status vlasništva</span>
           <select
             name="ownershipStatusHint"
             defaultValue={String(state.values.ownershipStatusHint ?? "unknown")}
@@ -225,9 +227,9 @@ export function ManualEntryForm() {
             <option value="unknown">Nepoznato</option>
             <option value="private">Privatno</option>
             <option value="charter">Charter</option>
-            <option value="ex_charter">Bivsi charter</option>
+            <option value="ex_charter">Bivši charter</option>
           </select>
-          <small>Ovo je pocetni signal za pipeline, ne finalna kanonska vrijednost.</small>
+          <small>Ovo je početni signal za pipeline, ne finalna kanonska vrijednost.</small>
           <FieldError message={state.fieldErrors.ownershipStatusHint} />
         </label>
 
@@ -264,7 +266,7 @@ export function ManualEntryForm() {
             name="rawNotes"
             rows={4}
             defaultValue={state.values.rawNotes}
-            placeholder="Interna napomena za pregled, sumnju u vlasnistvo ili kvalitetu oglasa."
+            placeholder="Interna napomena za pregled, sumnju u vlasništvo ili kvalitetu oglasa."
           />
           <small>
             Bilješka ostaje vezana uz ručni unos i ne gubi se pri kasnijoj obradi.
@@ -275,8 +277,10 @@ export function ManualEntryForm() {
 
       <div className="form-actions">
         <p className="helper-copy">
-          Nakon spremanja zapis ostaje u `pending` statusu dok sljedeci pipeline
-          korak ne napravi ekstrakciju, normalizaciju, validaciju i objavu.
+          Nakon spremanja zapis ostaje u `pending` statusu dok sljedeći pipeline
+          korak ne napravi ekstrakciju, normalizaciju, validaciju i eventualnu
+          objavu. Glavni proizvod koristi valuation-ready podatke, ne ovaj raw
+          unos direktno.
         </p>
         <SubmitButton />
       </div>

@@ -2,72 +2,15 @@
 
 import type {
   ManualEntryDraft,
-  ManualEntrySubmissionReceipt,
   OwnershipStatus
 } from "@ypi/domain";
 
 import { createServerQueryLayer } from "../../lib/query-layer";
-
-const ownershipStatuses: OwnershipStatus[] = [
-  "private",
-  "charter",
-  "ex_charter",
-  "unknown"
-];
-
-type ManualEntryField =
-  | "enteredBy"
-  | "listingUrl"
-  | "sourceListingKey"
-  | "title"
-  | "description"
-  | "builder"
-  | "model"
-  | "variant"
-  | "yearBuilt"
-  | "askingPrice"
-  | "currency"
-  | "location"
-  | "ownershipStatusHint"
-  | "engineInfo"
-  | "rawNotes";
-
-export interface ManualEntryFormState {
-  status: "idle" | "success" | "error";
-  message: string | null;
-  fieldErrors: Partial<Record<ManualEntryField, string>>;
-  values: ManualEntryDraft;
-  receipt: ManualEntrySubmissionReceipt | null;
-}
-
-function emptyDraft(): ManualEntryDraft {
-  return {
-    sourceName: "internal_manual_entry",
-    enteredBy: "",
-    listingUrl: "",
-    sourceListingKey: "",
-    title: "",
-    description: "",
-    builder: "",
-    model: "",
-    variant: "",
-    yearBuilt: "",
-    askingPrice: "",
-    currency: "EUR",
-    location: "",
-    ownershipStatusHint: "unknown",
-    engineInfo: "",
-    rawNotes: ""
-  };
-}
-
-export const initialManualEntryFormState: ManualEntryFormState = {
-  status: "idle",
-  message: null,
-  fieldErrors: {},
-  values: emptyDraft(),
-  receipt: null
-};
+import {
+  type ManualEntryField,
+  type ManualEntryFormState,
+  ownershipStatuses
+} from "./form-state";
 
 function readOptionalString(formData: FormData, field: ManualEntryField): string {
   const value = formData.get(field);
@@ -186,7 +129,7 @@ export async function submitManualEntryAction(
     return {
       status: "success",
       message:
-        "Unos je spremljen u raw ingestion sloj i čeka ekstrakciju, normalizaciju i objavu.",
+        "Unos je spremljen u sirovi ingestion sloj i čeka ekstrakciju, normalizaciju i objavu.",
       fieldErrors: {},
       values: draft,
       receipt

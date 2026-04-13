@@ -2,20 +2,21 @@ export default function CsvImportPage() {
   return (
     <main className="page-shell">
       <section className="hero-card">
-        <p className="eyebrow">Secondary input path</p>
-        <h1>CSV import is supported, but not assumed.</h1>
+        <p className="eyebrow">Bootstrap / admin alat</p>
+        <h1>CSV uvoz je pomoćni put za kontrolirane tablice.</h1>
         <p className="lede">
-          The system does not depend on any confirmed external dataset. CSV
-          import stays available for controlled inputs when a valid source is
-          later confirmed.
+          Glavni tržišni dataset treba dolaziti iz scraping adaptera za
+          marketplace i broker izvore. CSV uvoz ostaje dostupan samo za
+          bootstrap, testne podatke ili admin kontrolirane tablice.
         </p>
       </section>
 
       <section className="panel">
-        <h2>Design rule</h2>
+        <h2>Pravilo dizajna</h2>
         <p>
-          Importers must map unknown input columns into raw ingestion records
-          instead of shaping the whole system around one source format.
+          Importeri moraju mapirati nepoznate ulazne stupce u raw ingestion
+          zapise. CSV format ne smije oblikovati glavni product flow, koji radi
+          nad valuation-ready slojem.
         </p>
       </section>
     </main>
