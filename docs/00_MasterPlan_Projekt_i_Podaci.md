@@ -1,30 +1,47 @@
 # Master plan projekta i podatkovnog sloja
 
 ## 1. Svrha dokumenta
-Ovaj dokument definira kako projekt stvarno dolazi do tržišnih podataka, kako se ti podaci čiste i standardiziraju, kako se spremaju u bazu i kako se dalje koriste za evaluaciju vrijednosti plovila i radnički web app.
+Ovaj dokument definira stvarni smjer projekta: sustav je market comparison engine i search UI za procjenu cijena mediteranskih plovila.
 
-Glavna ideja projekta nije "napraviti scraper pa vidjeti što će izaći", nego izgraditi kontrolirani interni podatkovni sustav s jasnim fazama:
-1. ručni unos i CSV import
-2. poluautomatizirani import iz prioritetnih izvora
-3. scraping za podržane izvore
-4. cleaning i normalizacija
-5. deduplikacija i kvalitativno bodovanje zapisa
-6. scoring usporedivih plovila
-7. prikaz u internom web alatu
+End product nije worker data-entry alat i nije admin panel. Ručni unos i CSV import postoje samo kao bootstrap/admin alati za rane podatke, testiranje i iznimne korekcije. Glavna vrijednost proizvoda je da korisnik unese ciljano plovilo, dobije relevantne usporedive brodove i vidi branljiv raspon cijene s objašnjenjem.
+
+Glavni korisnički tok:
+
+`input boat -> retrieve comparables -> compute price range -> explain result`
+
+Glavna podatkovna logika ostaje nepromijenjena:
+
+`raw -> normalized -> valuation-ready -> scoring -> search/comparison UI`
 
 ## 2. Temeljni problem koji rješavamo
-Radnik treba odgovoriti na vrlo konkretno poslovno pitanje:
+Korisnik treba odgovoriti na konkretno tržišno pitanje:
 
 "Koji su najbolji usporedivi mediteranski primjeri za ovo plovilo i koji je branljiv raspon cijene?"
 
-Zbog toga podatkovni sustav mora podržati:
+Zbog toga sustav mora podržati:
 - pouzdan builder/model matching
 - nearest-year fallback
 - razliku između private, charter i ex-charter statusa
 - objašnjiv izračun preporučenog raspona
 - trag izvora i kvalitete podataka
+- pretraživanje i filtriranje nad čistim tržišnim datasetom
 
-## 3. Zašto je podatkovni sloj najteži dio
+## 3. Product framing
+Sustav se gradi kao:
+- search interface za mediteranske cijene brodova
+- market comparison engine za usporedive oglase
+- valuation-ready data product koji scoring engine može koristiti
+- interni alat za donošenje branljivih procjena cijene
+
+Sustav se ne gradi kao:
+- chat tražilica
+- primarno worker data-entry sučelje
+- admin panel za ručno održavanje baze
+- scraper bez podatkovne kontrole
+
+Manual entry i CSV import ostaju korisni, ali samo kao pomoćni admin/bootstrap tokovi. Core product je rezultat nad valuation-ready datasetom.
+
+## 4. Zašto je podatkovni sloj najteži dio
 Najveći rizik projekta nije UI ni osnovni SQL, nego činjenica da:
 - ne postoji jedan kvalitetan javni API za sve relevantne oglase
 - podaci po oglasnicima nisu standardizirani
@@ -34,65 +51,34 @@ Najveći rizik projekta nije UI ni osnovni SQL, nego činjenica da:
 - tražena cijena nije isto što i realizirana cijena
 - izvori se mijenjaju, brišu oglase i mijenjaju strukturu stranice
 
-Zato se projekt mora voditi kao data acquisition + data quality sustav, a ne samo kao scraping task.
+Zato se projekt mora voditi kao data acquisition + data quality sustav. Scraping je primarni način akvizicije tržišnih podataka, ali scraping smije puniti samo raw ingestion sloj. Poslovna logika radi tek nad normaliziranim i valuation-ready podacima.
 
-## 4. Princip rada po fazama
+## 5. Valuation-ready dataset kao core product layer
+Valuation-ready dataset je najvažniji proizvodni sloj sustava.
 
-### Faza A - Osnovni operativni MVP bez punog scrapinga
-Cilj je da alat radi i prije nego što scraping bude stabilan.
+On predstavlja tržišne zapise koji su:
+- prikupljeni iz raw izvora
+- parsirani i normalizirani
+- mapirani na kanonski builder/model/variant
+- očišćeni po valuti, lokaciji, ownership statusu i osnovnim tehničkim poljima
+- deduplikacijski obrađeni ili barem označeni
+- dovoljno kvalitetni za scoring i prikaz u search/comparison UI-ju
 
-Ulazi:
-- ručni unos
-- standardizirani CSV import
-- interni seed dataset
-- ručno prikupljeni prioritetni mediteranski oglasi
+UI i scoring ne čitaju raw tablice direktno. Raw sloj služi za audit, reprocessing i debug. Normalized sloj služi za strukturiranje. Valuation-ready sloj je proizvodni sloj za tržišnu usporedbu.
 
-Ishod:
-- baza ima dovoljno kvalitetne podatke za testiranje scoringa
-- workeri mogu koristiti alat
-- backend i UI nisu blokirani čekanjem scrapinga
+## 6. Glavni arhitekturni slojevi
 
-### Faza B - Poluautomatizirani acquisition layer
-Cilj je smanjiti ručni rad.
+### 6.1 Ingestion layer
+Zadužen je za dohvat sirovih podataka iz:
+- marketplace i broker scrapinga
+- pilot adaptera
+- budućih kontroliranih feedova/API-ja ako se pojave
+- ručnog unosa kao admin/bootstrap alata
+- CSV importa kao admin/bootstrap alata
 
-Ulazi:
-- kontrolirani importer za pojedine izvore
-- parseri po izvoru
-- batch validacija i review queue
+Izlaz ovog sloja je raw zapis sa source traceom i što manje pretpostavki.
 
-Ishod:
-- redovito punjenje baze
-- manji rizik od prljavih podataka
-- bolja kontrola kvalitete nego kod agresivnog masovnog scrapinga
-
-### Faza C - Operativni scraping sustav
-Cilj je redovno osvježavanje tržišnih podataka.
-
-Ulazi:
-- source registry
-- crawler scheduler
-- parser po izvoru
-- normalizacija
-- dedupe i quality flags
-
-Ishod:
-- kontinuirano praćenje tržišta
-- price history
-- stale / removed / duplicate statusi
-- bolji confidence valuation rezultata
-
-## 5. Glavni arhitekturni slojevi
-
-### 5.1 Source acquisition layer
-Zadužen za dohvat sirovih podataka iz:
-- ručnog unosa
-- CSV datoteka
-- web izvora
-- internih bilješki ili povijesnih tablica
-
-Izlaz ovog sloja nije finalni zapis za aplikaciju, nego raw zapis sa što manje pretpostavki.
-
-### 5.2 Parsing and normalization layer
+### 6.2 Pipeline layer
 Pretvara sirove zapise u kontrolirani standard:
 - builder
 - model
@@ -105,48 +91,89 @@ Pretvara sirove zapise u kontrolirani standard:
 - motori
 - tehničke dimenzije
 
-### 5.3 Data quality and deduplication layer
-Procjenjuje:
-- je li zapis potpun
-- je li zapis vjerojatno duplikat
-- ima li kontradikcija
-- kolika je pouzdanost izvora
-- smije li zapis ući u valuation set
+Ovdje se radi extraction, canonical mapping, unit/currency normalization, validation, dedupe priprema i quality signal.
 
-### 5.4 Serving layer
-Priprema izvedene tablice i API izlaze za:
-- scoring engine
-- search UI
-- summary panel
-- audit trail
-- export izvještaj
+### 6.3 Valuation-ready layer
+Objavljuje samo zapise koji su dovoljno čisti za search, comparison i scoring.
 
-## 6. Načela dizajna datasetova
-Podatke ne spremamo samo u jednu tablicu "listings", nego u više slojeva.
+Ovaj sloj mora sadržavati sve što UI treba za usporedive brodove:
+- canonical builder/model/variant
+- godina i fallback signal
+- ownership status
+- lokacija
+- cijena u standardiziranoj valuti
+- source trace
+- reliability i quality signali
+- razlog uključenja ili isključenja
 
-### Sloj 1 - raw ingestion
-Sirovi zapis kakav je došao s izvora.
-Ne briše se osim u iznimnim slučajevima.
-Služi za:
-- audit
-- ponovni parsing
-- debug parsera
-- usporedbu verzija
+### 6.4 Scoring layer
+Računa relevantnost comparablesa i preporučeni raspon cijene. Ne dohvaća raw podatke i ne zna ništa o scraperima.
 
-### Sloj 2 - normalized listing
-Standardizirani zapis spreman za poslovnu upotrebu.
-Sadrži:
-- kanonske vrijednosti
-- mapirane enum tipove
-- standardizirane valute i jedinice
+### 6.5 UI layer
+Web app je primarno search and comparison interface:
+- korisnik unosi ciljano plovilo
+- sustav dohvaća valuation-ready comparables
+- scoring engine rangira i objašnjava rezultate
+- summary prikazuje raspon cijene, medianu/prosjek i confidence
 
-### Sloj 3 - matched / deduped market entity
-Predstavlja jedinstveni tržišni primjerak kad je isti oglas viđen na više mjesta ili više puta.
+UI je read-only prema valuation-ready sloju za glavni product flow. Admin/bootstrap forme smiju postojati, ali nisu core product.
 
-### Sloj 4 - valuation-ready comparable set
-Skup zapisa koji su prošli kvalitetne provjere i smiju ulaziti u scoring.
+## 7. Redefinirani roadmap
 
-## 7. Što mora biti automatizirano, a što ostaje ručno
+### Phase 1 - Foundation (već napravljeno)
+Cilj:
+- repo scaffold
+- osnovne Next.js/TypeScript/Supabase granice
+- raw ingestion temelj
+- source registry temelj
+- normalized core schema
+- manual entry bootstrap path prema raw sloju
+- pipeline contracts
+
+Manual entry ovdje služi samo da sustav ima kontrolirani ulaz dok data engine i scraping nisu gotovi.
+
+### Phase 2 - Data engine
+Cilj:
+- implementirati raw -> normalized pipeline
+- field extraction
+- builder/model/variant mapping
+- ownership/location/currency normalization
+- validation i review signals
+- publication u normalized i valuation-ready sloj
+
+Bez ovog sloja search UI i scoring ne smiju postati glavni product.
+
+### Phase 3 - Scraping (1-2 izvora prvo)
+Cilj:
+- odabrati 1 do 2 izvora s najvećom poslovnom vrijednošću
+- napraviti source adaptere i snapshot fixtures
+- puniti raw ingestion iz stvarnih marketplace/broker izvora
+- povezati adaptere s pipelineom
+- pratiti promjene cijene, stale/removed signale i parser health
+
+Scraping je primarni acquisition model, ali širi se tek nakon što pipeline radi nad pilot izvorima.
+
+### Phase 4 - Search and comparison UI (glavni proizvod)
+Cilj:
+- strukturirana forma za ciljano plovilo
+- dohvat comparable kandidata iz valuation-ready sloja
+- prikaz rezultata, source tracea i osnovnih quality signala
+- summary panel za branljiv raspon cijene
+- jasno označen nearest-year fallback
+
+Ovo je glavni korisnički proizvod, ne admin panel.
+
+### Phase 5 - Scoring and intelligence improvements
+Cilj:
+- bolji scoring weights
+- kvalitetniji confidence model
+- bolji duplicate handling
+- explainability poboljšanja
+- veći source coverage
+- price history i trendovi
+- regression testovi za mapping i scoring pravila
+
+## 8. Što mora biti automatizirano, a što ostaje ručno
 Automatizirati treba:
 - dohvat HTML-a / feedova gdje je dopušteno i stabilno
 - ekstrakciju polja
@@ -155,6 +182,7 @@ Automatizirati treba:
 - označavanje stale / removed oglasa
 - price history snapshoting
 - review queue za problematične zapise
+- publication u valuation-ready dataset
 
 Ručno ostaje:
 - verifikacija spornih modela i varijanti
@@ -162,25 +190,15 @@ Ručno ostaje:
 - unos internih bilješki
 - potvrda važnih pravila mapiranja
 - odobrenje parsera prije produkcije
+- bootstrap/admin unos u iznimnim slučajevima
 
-## 8. Konkretni operativni plan
-1. Definirati source registry i prioritetne izvore.
-2. Napraviti raw ingestion tablice i file storage za raw HTML/JSON snapshot.
-3. Uvesti canonical mapping tablice za builder, model, variant i lokacije.
-4. Izgraditi cleaning pipeline kao zaseban Python modul, ne kao logiku razbacanu po skriptama.
-5. Implementirati dedupe i quality scoring.
-6. Izgraditi valuation-ready view / materialized view.
-7. Spojiti scoring engine na valuation-ready sloj.
-8. Spojiti web app na query/API sloj, ne direktno na sirove tablice.
-9. Uvesti monitoring po izvoru: broj zapisa, broj grešaka, coverage, zadnji uspješan crawl.
-10. Tek nakon stabilnog ingestion + cleaning sloja širiti broj izvora.
-
-## 9. Definicija uspjeha za podatkovni dio
-Podatkovni dio je "done" za MVP kad:
-- postoji kontroliran ručni unos i CSV import
-- postoji najmanje jedan standardizirani seed dataset za testiranje
+## 9. Definicija uspjeha za MVP
+MVP je uspješan kad:
 - postoji raw -> normalized -> valuation-ready pipeline
-- postoji barem osnovna deduplikacija
-- svaki valuation rezultat ima trag izvora
-- nearest-year fallback radi nad čistim i standardiziranim podacima
-- worker može otvoriti zapis i razumjeti zašto je odabran
+- postoje 1 do 2 pilot scraping izvora
+- valuation-ready dataset ima dovoljno kvalitetnih mediteranskih comparablesa
+- search UI može dohvatiti i prikazati usporedive brodove
+- scoring vraća objašnjiv ranking i preporučeni raspon cijene
+- svaki rezultat ima source trace i quality signal
+- nearest-year fallback je jasno označen
+- manual entry i CSV import postoje samo kao admin/bootstrap alati, ne kao glavni product flow
