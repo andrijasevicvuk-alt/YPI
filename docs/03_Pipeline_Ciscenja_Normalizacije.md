@@ -177,10 +177,10 @@ Ti ugovori definiraju:
 - `Publisher` za upis u normalized core tablice
 
 ## 8. Trenutni operativni boundary nakon Step 3
-Manual entry sada puni raw sloj kroz aplikaciju, ali publication ostaje odvojen.
+Manual entry je pomoćni admin/bootstrap ulaz koji sada puni raw sloj kroz aplikaciju, ali publication ostaje odvojen.
 
 Aktivni tok:
-1. worker unese zapis kroz app
+1. admin unese kontrolirani bootstrap zapis kroz app
 2. payload se sprema u `raw_listings` i `worker_manual_entries`
 3. record ostaje u `pending` statusu
 4. sljedeca faza ce napraviti extraction -> normalization -> validation -> publication

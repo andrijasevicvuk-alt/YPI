@@ -78,7 +78,7 @@ export function ManualEntryForm() {
 
       <div className="form-grid">
         <label className="field">
-          <span>Radnik / inicijali</span>
+          <span>Admin / inicijali</span>
           <input
             name="enteredBy"
             type="text"

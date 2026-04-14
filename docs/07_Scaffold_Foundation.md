@@ -116,7 +116,7 @@ Ispravljeno:
 - manual entry forma više ne čita `state.values` prije sigurne inicijalizacije statea
 - inicijalni form state premješten je iz server action modula u neutralni `form-state.ts`
 - forma normalizira state prije čitanja `defaultValue` vrijednosti
-- worker-facing UI tekst na rutama `/`, `/manual-entry`, `/csv-import` i `/architecture` preveden je na hrvatski
+- vidljivi UI tekst na rutama `/`, `/manual-entry`, `/csv-import` i `/architecture` preveden je na hrvatski
 
 Arhitektura nije promijenjena:
 - ručni unos i dalje ide prvo u raw ingestion sloj

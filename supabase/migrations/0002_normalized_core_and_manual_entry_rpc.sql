@@ -25,7 +25,7 @@ values (
   0.80,
   0.70,
   0.70,
-  'Primary guaranteed input path during early MVP.'
+  'Bootstrap/admin input path for controlled examples, tests, and exceptional corrections.'
 )
 on conflict (source_name) do nothing;
 

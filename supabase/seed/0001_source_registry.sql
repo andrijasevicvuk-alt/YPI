@@ -25,7 +25,7 @@ values
     0.80,
     0.70,
     0.70,
-    'Primary guaranteed input path during early MVP.'
+    'Bootstrap/admin input path for controlled examples, tests, and exceptional corrections.'
   ),
   (
     'controlled_csv_upload',
@@ -39,7 +39,7 @@ values
     0.70,
     0.60,
     0.60,
-    'Secondary controlled import path. No external dataset is assumed.'
+    'Bootstrap/admin import path. No external dataset is assumed and CSV does not define the main product flow.'
   ),
   (
     'seed_internal_dataset',

@@ -3,14 +3,15 @@
 Treba mi potpuni plan podatkovnog sloja za interni alat za procjenu vrijednosti plovila za Yacht Premium Insurance.
 
 Projektni cilj:
-Napraviti interni web alat u kojem radnik unosi podatke o ciljanom plovilu i dobiva najbolje usporedive mediteranske oglase te branljiv raspon cijena.
+Napraviti interni search/comparison alat u kojem korisnik unosi podatke o ciljanom plovilu, sustav dohvaća najbolje usporedive mediteranske oglase iz valuation-ready dataseta i prikazuje branljiv raspon cijena.
 
 Važno:
 - projekt radimo na hrvatskom
 - ne želim općeniti AI chat alat nego strukturirani valuation alat
 - najvažniji dio projekta je kako dolazimo do podataka, kako ih čistimo, kako ih strukturiramo i kako ih kasnije koristimo za scoring i web app
 - nemamo kvalitetan jedinstveni API ni gotov dataset za sve relevantne oglase
-- zato trebam realan plan za scraping, CSV import, ručni unos, cleaning pipeline, dedupe, quality score i valuation-ready dataset
+- zato trebam realan plan za scraping kao primarni acquisition model, te CSV import i ručni unos samo kao bootstrap/admin alate
+- cleaning pipeline, dedupe, quality score i valuation-ready dataset su temelj glavnog proizvoda
 
 Želim da odgovor bude organiziran u ove cjeline:
 1. strategija akvizicije podataka po fazama

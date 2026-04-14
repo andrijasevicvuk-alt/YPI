@@ -6,12 +6,13 @@ Promptove šalji redom. Nemoj odmah tražiti da Codex radi sve odjednom. Prvo ne
 ---
 
 ## 1. Početni plan prije pisanja koda
-Pregledaj repozitorij i predloži najjednostavniju implementaciju MVP internog alata za procjenu vrijednosti plovila.
+Pregledaj repozitorij i predloži najjednostavniju implementaciju MVP market comparison enginea i search/comparison UI-ja za procjenu vrijednosti plovila.
 
 Kontekst:
-- projekt je interni valuation alat, nije chat tražilica
+- projekt je strukturirani valuation i market comparison alat, nije chat tražilica
 - prioritet je podatkovni sloj, quality pipeline i objašnjiv scoring
-- ručni unos i CSV import moraju raditi prije punog scrapinga
+- scraping marketplace i broker izvora je primarni acquisition model
+- ručni unos i CSV import su samo bootstrap/admin alati i ne smiju oblikovati glavni product flow
 - scraping, cleaning i scoring ne smiju biti spojeni u jednu nečitljivu cjelinu
 
 Prvo napiši:
@@ -53,8 +54,8 @@ Sve mora biti spremno za versioning kroz migracije.
 
 ---
 
-## 4. Seed podaci i CSV import
-Generiraj seed podatke za 20-30 realističnih mediteranskih oglasa.
+## 4. Seed podaci i bootstrap/admin CSV import
+Generiraj mali skup project-owned seed podataka za razvoj, testiranje i provjeru scoring edge caseova.
 
 Treba uključiti:
 - private, charter i ex-charter primjere
@@ -64,12 +65,13 @@ Treba uključiti:
 - različite konfiguracije motora
 - barem nekoliko namjernih edge caseova za test cleaninga
 
-Zatim dodaj jednostavan CSV import:
+Ako je potreban CSV import, tretiraj ga kao pomoćni admin/bootstrap put:
 - upload datoteke
 - mapiranje stupaca
 - osnovna validacija
 - preview prije importa
-- spremanje u bazu
+- spremanje prvo u raw ingestion sloj
+- bez prilagođavanja glavnog modela podataka jednom CSV layoutu
 
 ---
 
@@ -77,7 +79,7 @@ Zatim dodaj jednostavan CSV import:
 Implementiraj osnovni Python data pipeline.
 
 Želim:
-- raw ingestion spremanje
+- raw ingestion spremanje za scraping izvore, uz pomoćne admin/bootstrap ulaze
 - parser / extractor sloj
 - canonical mapping builder/model/variant
 - currency i unit normalization

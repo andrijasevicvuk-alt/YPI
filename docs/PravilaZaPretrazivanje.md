@@ -1,15 +1,15 @@
 # PravilaZaPretrazivanje.md
 
 ## Svrha
-Ovaj dokument definira pravila pretrage, usporedbe i prikaza rezultata za interni MVP alat.
+Ovaj dokument definira pravila pretrage, usporedbe i prikaza rezultata za interni market comparison MVP.
 
 ## Osnovna pravila pretrage
-- Radnik ne piše dugi chat upit, nego koristi strukturirana polja.
+- Korisnik ne piše dugi chat upit, nego koristi strukturirana polja.
 - Builder, model, godina i ownership status su obavezni kada god su poznati.
 - Ako nema točne godine, sustav jasno označava da koristi nearest-year fallback.
 - Charter i ex-charter usporedbe ne smiju se miješati s private rezultatima bez vidljive oznake.
 - Svaki rezultat mora imati izvor, datum viđenja i cijenu u standardiziranoj valuti.
-- Worker notes služe za internu procjenu i ne smiju se izgubiti pri refaktoru, importu ili reprocessingu.
+- Interne bilješke (`worker_notes`) služe za audit i korekcije te se ne smiju izgubiti pri refaktoru, importu ili reprocessingu.
 
 ## Pravila dataset ulaza
 - Raw podaci nikad ne idu direktno u UI i scoring.
@@ -30,7 +30,7 @@ Ovaj dokument definira pravila pretrage, usporedbe i prikaza rezultata za intern
 - Summary panel mora prikazati preporučeni raspon, medianu, prosjek, broj usporedbi i confidence.
 - Rezultati moraju imati numeric score i kratko objašnjenje.
 - Ako se koristi fallback, to mora biti jasno napisano na vrhu rezultata.
-- Worker mora moći otvoriti detalj i vidjeti source trace i osnovni quality status.
+- Korisnik mora moći otvoriti detalj i vidjeti source trace i osnovni quality status.
 
 ## Pravila razvoja
 - Svaka promjena pravila mora biti evidentirana u GitHub repou.
