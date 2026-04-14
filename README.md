@@ -13,6 +13,7 @@ Za daljnji rad koristi samo dokumente u mapi `docs/`.
 - `docs/04_Scraping_Automatizacija_i_Operativa.md` - scraping arhitektura, scheduling i monitoring
 - `docs/05_Evaluacija_i_WebApp_Integracija.md` - kako podaci hrane scoring, API i UI
 - `docs/06_Codex_Upute_DataLayer.md` - jasne upute za Codex za data layer
+- `docs/08_Verifikacija_Step3_ManualEntry.md` - smoke provjera manual-entry raw ingestion toka
 - `docs/AGENTS.md` - operativna pravila projekta
 - `docs/PravilaZaPretrazivanje.md` - pravila pretrage, scoringa i prikaza
 - `docs/PromptoviZaCodex.md` - paket promptova za implementaciju
