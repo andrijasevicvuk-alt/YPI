@@ -11,11 +11,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "baseUrl": ".",
     "paths": {
-      "@ypi/domain": ["packages/domain/src/index.ts"],
-      "@ypi/data-access": ["packages/data-access/src/index.ts"],
-      "@ypi/scoring": ["packages/scoring/src/index.ts"]
+      "@ypi/domain": ["./packages/domain/src/index.ts"],
+      "@ypi/data-access": ["./packages/data-access/src/index.ts"],
+      "@ypi/scoring": ["./packages/scoring/src/index.ts"]
     }
   }
 }

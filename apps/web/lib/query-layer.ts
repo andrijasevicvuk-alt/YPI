@@ -3,9 +3,7 @@ import {
   type QueryLayer
 } from "@ypi/data-access";
 
-function readEnv(name: string): string | undefined {
-  const value = process.env[name];
-
+function readEnv(value: string | undefined): string | undefined {
   if (!value) {
     return undefined;
   }
@@ -16,10 +14,14 @@ function readEnv(name: string): string | undefined {
 
 export function createServerQueryLayer(): QueryLayer {
   const projectUrl =
-    readEnv("SUPABASE_URL") ?? readEnv("NEXT_PUBLIC_SUPABASE_URL");
+    readEnv(process.env.SUPABASE_URL) ??
+    readEnv(process.env.NEXT_PUBLIC_SUPABASE_URL);
   const apiKey =
-    readEnv("SUPABASE_SERVICE_ROLE_KEY") ??
-    readEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    readEnv(process.env.SUPABASE_SERVICE_ROLE_KEY) ??
+    readEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+  console.log("URL:", projectUrl);
+  console.log("KEY exists:", !!apiKey);
 
   if (!projectUrl || !apiKey) {
     throw new Error(
