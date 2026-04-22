@@ -24,6 +24,7 @@ Manual entry i CSV import postoje kao bootstrap/admin alati, ali nisu core produ
 6. nearest-year fallback
 7. jasan summary panel s rasponom cijene
 8. trag izvora i kvalitete podataka
+9. hrvatski i jadranski market anchor unutar šireg mediteranskog valuationa
 
 ## Tech stack
 - Next.js
@@ -50,6 +51,11 @@ Manual entry i CSV import postoje kao bootstrap/admin alati, ali nisu core produ
 - confidence mora ovisiti o kvaliteti usporedbe
 - korisnik mora vidjeti izvor i osnovu rezultata
 - charter i ex-charter se ne smiju neprimjetno miješati s private rezultatima
+- geografija mora imati eksplicitnu važnost: Croatia -> Slovenia -> Adriatic -> Mediterranean
+- recentniji listingi moraju nositi veću težinu od starih listinga
+- stariji i udaljeniji listingi ostaju fallback, ali s nižim confidenceom
+- stariji listingi i dalje mogu pomagati price rangeu i market contextu
+- confidence pada zato što su stariji podaci slabiji signal trenutnog tržišta, ne zato što su automatski beskorisni
 
 ## Podatkovna pravila
 - raw podaci se čuvaju radi audita i reprocessinga
@@ -59,6 +65,8 @@ Manual entry i CSV import postoje kao bootstrap/admin alati, ali nisu core produ
 - svaki izvor mora imati source registry zapis
 - duplicate handling i quality scoring su obavezni prije ozbiljnog product scoringa
 - svaka promjena mapping pravila mora biti testabilna
+- Step 4 ne uvodi scoring ni weighting; samo priprema pipeline outpute za kasniji scoring
+- geography-aware i recency-aware logika pripadaju Step 5+
 
 ## Done znači
 - aplikacija se može pokrenuti lokalno
@@ -70,3 +78,9 @@ Manual entry i CSV import postoje kao bootstrap/admin alati, ali nisu core produ
 - nearest-year fallback radi
 - UI prikazuje razlog matcha, source trace i quality status
 - osnovna dokumentacija postoji i odgovara stanju koda
+
+## Trenutni status
+- Step 1 gotov
+- Step 2 gotov
+- Step 3 gotov
+- sljedeći rad počinje od Step 4

@@ -13,6 +13,7 @@ End product nije worker data-entry alat. End product je search and comparison UI
 - scraping marketplace i broker izvora je primarni acquisition model za pravi tržišni dataset
 - manual entry i CSV import su bootstrap/admin alati, ne core product feature
 - raw -> normalized -> valuation-ready arhitektura ostaje glavno pravilo
+- valuation ostaje mediteranski, ali lokalno usidren prema Hrvatskoj i bližem Jadranu
 
 ## Arhitekturne granice
 - `apps/web` je primarno search and comparison UI, uz moguće admin/bootstrap rute
@@ -58,6 +59,12 @@ Trenutno implementirano:
 
 Ovo nije finalni proizvod. Ovo je temelj koji omogućuje sljedeći data engine i scraping rad.
 
+Nakon ovog docs pass-a status je:
+- Step 1 završen
+- Step 2 završen
+- Step 3 završen
+- sljedeći implementacijski rad počinje od Step 4
+
 ## Trenutni raw ingestion flow za manual entry
 Aktivni tok za manual entry sada izgleda ovako:
 
@@ -80,6 +87,9 @@ Namjerno nije implementirano u ovoj fazi:
 - scraping adapteri
 - search/comparison UI kao glavni product flow
 - puni CSV import workflow
+- geography-aware scoring
+- recency-aware confidence
+- Croatia / Slovenia / Adriatic / Mediterranean retrieval prioriteti
 
 ## Redefinirani roadmap
 
@@ -89,6 +99,12 @@ Scaffold, raw ingestion temelj, source registry, normalized core schema, manual 
 ### Phase 2 - Data engine
 Implementirati raw -> normalized pipeline, canonical mapping, normalization, validation i publication u valuation-ready sloj.
 
+Ovo je sljedeći korak rada:
+- Step 4 počinje ovdje
+- Step 4 ostaje fokusiran na extraction, normalization, validation i publication
+- Step 4 koristi minimalne bootstrap/pilot podatke i kontrolirane source kombinacije za provjeru pipelinea
+- Step 4 ne implementira scoring weights ni ranking logiku
+
 ### Phase 3 - Scraping
 Uvesti 1 do 2 marketplace/broker izvora, napraviti adaptere, raw snapshots, parser fixtures i povezati ih s pipelineom.
 
@@ -97,6 +113,13 @@ Izgraditi glavni product UI: unos ciljanog plovila, dohvat valuation-ready compa
 
 ### Phase 5 - Scoring and intelligence improvements
 Poboljšati scoring, confidence model, duplicate handling, explainability, source coverage i price history/trendove.
+
+Tu kasnije ulaze:
+- Croatia-first valuation anchor
+- Slovenia kao high-relevance adjacent micro-market
+- Adriatic regionalni fallback
+- Mediterranean fallback context
+- recency-aware weighting i niži confidence za udaljene ili stare comparablese
 
 ## Uloga web appa
 Web app je primarno search and comparison interface.
@@ -124,3 +147,12 @@ Arhitektura nije promijenjena:
 - nema dedupea
 - nema scoringa
 - nema valuation-ready publicationa
+
+## Dodatno definirana valuation strategija za sljedeće faze
+Foundation je gotov, ali scoring strategija je sada jasnije definirana za kasniji rad:
+- Hrvatska je primarni market anchor
+- Slovenija je vrlo važan susjedni mikro-market
+- ostali Jadran je snažan regionalni sloj
+- širi Mediteran služi kao fallback i širi tržišni kontekst
+
+Ove smjernice ne mijenjaju Step 1-3 implementacijski status. One služe da Step 4 pripremi podatke, a Step 5 kasnije može provesti scoring i confidence pravila bez arhitekturnog loma.

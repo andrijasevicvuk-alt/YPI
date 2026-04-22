@@ -8,6 +8,12 @@ Scraper nikad ne piše direktno u business/scoring tablice. Njegov izlaz je raw 
 ## 2. Product kontekst
 End product je search and comparison UI za mediteranske cijene brodova. Scraping postoji zato da valuation-ready dataset ima dovoljno svježih i usporedivih tržišnih oglasa.
 
+Valuation nije Croatia-only, ali nije ni flat Mediterranean view. Scraping strategija mora podržati:
+- hrvatski local anchor
+- slovenski high-relevance adjacent micro-market
+- jadranski regionalni sloj
+- širi mediteranski fallback sloj
+
 Glavni tok:
 
 `marketplace/broker source -> scraper adapter -> raw ingestion -> pipeline -> valuation-ready dataset -> scoring -> search/comparison UI`
@@ -73,6 +79,11 @@ Predloženo:
 - admin CSV import: on demand
 - manual entry: samo iznimno, za bootstrap ili korekcije
 
+Recency je kasnije i scoring signal:
+- recentniji listingi nose veću težinu
+- stariji listingi se ne odbacuju automatski, nego ostaju fallback uz niži confidence
+- vrlo stari listingi moraju biti vidljivo označeni ako ulaze u valuation output
+
 ## 5. Promjena cijene i statusa oglasa
 Sustav mora razlikovati:
 - novi listing
@@ -92,6 +103,7 @@ Scraping mora podržati delta logiku, ne samo insert. Price history je važan di
 - source-specific logika se ne smije miješati s canonical business logikom
 - parser output mora biti reprocessabilan iz raw snapshotova
 - adapteri se uvode jedan po jedan, ne masovno
+- kombinacije izvora procjenjuju se empirijski, ne ide se odmah na "scrape everything"
 
 ## 7. Operativni workflow za razvoj adaptera
 1. odabrati izvor po poslovnoj vrijednosti
@@ -105,6 +117,34 @@ Scraping mora podržati delta logiku, ne samo insert. Price history je važan di
 9. pustiti pilot crawl
 10. objaviti samo zapise koji prođu pipeline u valuation-ready dataset
 11. tek onda aktivirati periodično pokretanje
+
+## 7.1 Trenutno preporučeni rollout izvora
+Preporučeni rollout nije "svi izvori odmah", nego fazno uvođenje:
+
+Phase A:
+- Boat24 + Croatia Yachting
+
+Phase B:
+- Boat24 + Croatia Yachting + Marine One
+
+Phase C:
+- evaluirati poboljšava li iNautia valuation kvalitetu dovoljno da opravda dodatnu scraping složenost
+
+Uloge izvora:
+- Boat24 = marketplace backbone
+- Croatia Yachting = hrvatski / jadranski broker trust anchor
+- Marine One = dodatni hrvatski / jadranski broker trust anchor
+- iNautia = širi mediteranski / europski expansion layer
+
+Nakon svake faze procjenjuje se:
+- data quality
+- scraping stabilnost
+- usefulness za similarity/scoring
+- hrvatska relevantnost
+- mediteranski coverage
+- cost / maintenance burden
+
+Zadržava se kombinacija koja daje najbolji valuation quality per operational cost.
 
 ## 8. Risk register za scraping
 Glavni rizici:
@@ -126,6 +166,7 @@ Product ne treba "crawler koji nešto skupi", nego:
 - dovoljno coveragea za search i comparison UI
 - stabilan valuation-ready dataset za scoring
 - minimum ručnog ispravljanja
+- dovoljno hrvatskog i jadranskog anchora za lokalno uvjerljiv valuation
 
 ## 10. Deployment logika
 Preporuka:
@@ -144,3 +185,8 @@ Dovoljno je:
 - dovoljno kvalitetnih valuation-ready comparablesa za test search/comparison UI-ja
 - monitoring po izvoru
 - manual entry i CSV import kao bootstrap/admin fallback, ne kao core product
+
+Napomena o koracima:
+- Step 4 nakon ovog docs pass-a još ne implementira scoring ni weighting pravila
+- Step 4 mora pripremiti pipeline i source readiness
+- geography-aware scoring i recency-aware confidence pripadaju Step 5+

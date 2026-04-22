@@ -22,6 +22,9 @@ Zbog toga sustav mora podržati:
 - pouzdan builder/model matching
 - nearest-year fallback
 - razliku između private, charter i ex-charter statusa
+- geografsku bliskost hrvatskom tržištu kao eksplicitni signal
+- starost oglasa kao eksplicitni signal za confidence
+- korištenje starijih oglasa za razumijevanje raspona i strukture tržišta
 - objašnjiv izračun preporučenog raspona
 - trag izvora i kvalitete podataka
 - pretraživanje i filtriranje nad čistim tržišnim datasetom
@@ -66,6 +69,12 @@ On predstavlja tržišne zapise koji su:
 
 UI i scoring ne čitaju raw tablice direktno. Raw sloj služi za audit, reprocessing i debug. Normalized sloj služi za strukturiranje. Valuation-ready sloj je proizvodni sloj za tržišnu usporedbu.
 
+Valuation filozofija nije "Croatia-only pricing". Sustav je mediteranski valuation alat, ali lokalno usmjeren prema hrvatskoj tržišnoj realnosti:
+- Hrvatska je primarni lokalni market anchor
+- Slovenija je visoko relevantan susjedni mikro-market
+- Adriatic listingi su jaki regionalni comparables
+- širi Mediteran služi kao fallback i kontekst šireg tržišta
+
 ## 6. Glavni arhitekturni slojevi
 
 ### 6.1 Ingestion layer
@@ -109,6 +118,19 @@ Ovaj sloj mora sadržavati sve što UI treba za usporedive brodove:
 ### 6.4 Scoring layer
 Računa relevantnost comparablesa i preporučeni raspon cijene. Ne dohvaća raw podatke i ne zna ništa o scraperima.
 
+Važno:
+- scoring i confidence u budućnosti moraju uz builder/model/variant/year/ownership/engine gledati i geografsku bliskost Hrvatskoj
+- recentniji oglasi moraju imati jači signal trenutnog tržišta
+- stariji oglasi nisu beskorisni; oni i dalje pomažu definirati raspon, floor/ceiling i strukturu tržišta
+- stariji ili geografski udaljeniji oglasi smiju ostati fallback, ali uz niži confidence i jasnu oznaku
+- treba jasno razlikovati price influence od confidence influence
+- ova pravila ne ulaze u Step 4 implementaciju; služe kao smjer za Step 5 i valuation-ready scoring logiku
+
+Konceptualno:
+- comparable može imati price influence i kad je stariji
+- isti comparable može imati slabiji confidence influence ako je star, dalek ili ako je dostupno malo usporedbi
+- starost sama po sebi ne čini podatak bezvrijednim; smanjuje sigurnost procjene trenutnog tržišnog stanja
+
 ### 6.5 UI layer
 Web app je primarno search and comparison interface:
 - korisnik unosi ciljano plovilo
@@ -119,6 +141,12 @@ Web app je primarno search and comparison interface:
 UI je read-only prema valuation-ready sloju za glavni product flow. Admin/bootstrap forme smiju postojati, ali nisu core product.
 
 ## 7. Redefinirani roadmap
+
+Trenutni status:
+- Step 1 je završen
+- Step 2 je završen
+- Step 3 je završen
+- sljedeći implementacijski rad počinje od Step 4
 
 ### Phase 1 - Foundation (već napravljeno)
 Cilj:
@@ -143,6 +171,12 @@ Cilj:
 
 Bez ovog sloja search UI i scoring ne smiju postati glavni product.
 
+U praktičnom redoslijedu rada to znači:
+- Step 4 počinje ovdje
+- Step 4 ostaje fokusiran na extraction, normalization, validation i publication granice
+- Step 4 radi nad minimalnim bootstrap/pilot podacima i kontroliranim source kombinacijama
+- geografski weights, recency weights i ranking logika još se ne implementiraju u ovom koraku
+
 ### Phase 3 - Scraping (1-2 izvora prvo)
 Cilj:
 - odabrati 1 do 2 izvora s najvećom poslovnom vrijednošću
@@ -151,7 +185,18 @@ Cilj:
 - povezati adaptere s pipelineom
 - pratiti promjene cijene, stale/removed signale i parser health
 
-Scraping je primarni acquisition model, ali širi se tek nakon što pipeline radi nad pilot izvorima.
+Scraping je primarni acquisition model, ali uvodi se fazno i empirijski:
+- Phase A: Boat24 + Croatia Yachting
+- Phase B: Boat24 + Croatia Yachting + Marine One
+- Phase C: testirati poboljšava li iNautia valuation kvalitetu dovoljno da opravda dodatnu scraping složenost
+
+Ne pretpostavlja se da "više izvora" automatski znači "bolji sustav". Nakon svake kombinacije treba procijeniti:
+- kvalitetu podataka
+- scraping stabilnost
+- usefulness za similarity/scoring
+- hrvatsku relevantnost
+- mediteranski coverage
+- cost / maintenance burden
 
 ### Phase 4 - Search and comparison UI (glavni proizvod)
 Cilj:
@@ -172,6 +217,13 @@ Cilj:
 - veći source coverage
 - price history i trendovi
 - regression testovi za mapping i scoring pravila
+
+Tu ulaze i:
+- Croatia -> Slovenia -> Adriatic -> Mediterranean retrieval prioriteti
+- geography-aware confidence
+- recency-aware weighting
+- niži confidence kad valuation ovisi o starijim ili udaljenijim comparablesima
+- price adjustment koncept za starije oglase kad ih treba približiti trenutnim tržišnim uvjetima
 
 ## 8. Što mora biti automatizirano, a što ostaje ručno
 Automatizirati treba:
@@ -201,4 +253,5 @@ MVP je uspješan kad:
 - scoring vraća objašnjiv ranking i preporučeni raspon cijene
 - svaki rezultat ima source trace i quality signal
 - nearest-year fallback je jasno označen
+- rezultat je mediteranski, ali lokalno usidren prema Hrvatskoj i bližem Jadranu
 - manual entry i CSV import postoje samo kao admin/bootstrap alati, ne kao glavni product flow

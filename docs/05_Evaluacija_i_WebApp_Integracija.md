@@ -42,6 +42,12 @@ On mora sadržavati:
 
 Sirovi i djelomično normalizirani podaci ostaju operativni slojevi, ne product UI slojevi.
 
+Valuation-ready sloj mora kasnije podržati i ove scoring/signaling atribute:
+- geography / market closeness prema Hrvatskoj
+- Croatia / Slovenia / Adriatic / Mediterranean retrieval bucket
+- recency bucket i starost listinga
+- warning signal kad nema dovoljno jakih recentnih hrvatskih comparablesa
+
 ## 4. Što scoring engine treba dobiti
 Scoring ne treba cijelu povijest raw podataka, nego čisti comparable payload:
 - canonical builder
@@ -57,6 +63,24 @@ Scoring ne treba cijelu povijest raw podataka, nego čisti comparable payload:
 - data quality score
 - duplicate/cluster signal
 - last_seen_at
+- geography closeness signal
+- retrieval tier signal
+
+## 4.1 Price influence vs confidence influence
+Svaki comparable listing kasnije sudjeluje na dva odvojena načina:
+
+1. Price influence
+- pomaže oblikovati valuation range
+- može biti koristan i kad je listing stariji
+- stariji listing i dalje može pomoći definirati floor, ceiling i širu tržišnu strukturu
+
+2. Confidence influence
+- opisuje koliko smo sigurni da valuation odražava trenutno tržište
+- pada kad su listingi stariji
+- pada kad su listingi geografski udaljeniji
+- pada kad postoji mali broj jakih comparablesa
+
+Ta dva signala ne smiju se konceptualno spojiti u jednostavno pravilo "staro = beskorisno".
 
 ## 5. Pravila prije scoriranja
 Prije izračuna se radi filter:
@@ -75,6 +99,8 @@ Za svaki comparable treba vratiti:
 - data quality summary
 - source summary
 - razlog zašto je comparable uključen
+- geography summary
+- recency summary
 
 ## 7. Summary engine
 Nakon rangiranja treba izračunati:
@@ -84,8 +110,14 @@ Nakon rangiranja treba izračunati:
 - broj jakih usporedbi
 - confidence razinu
 - upozorenja, npr. "nema točnog year matcha"
+- upozorenja kad nema recentnih hrvatskih ili bliskih jadranskih comparablesa
 
 Summary nije samo UI dekoracija. To je glavni proizvodni odgovor sustava.
+
+Ako summary više ovisi o starijim listingima, to ne znači da range nema vrijednost. To znači da:
+- price range i dalje može biti informativan
+- confidence treba biti niži
+- korisnik treba dobiti jasnu poruku da snažni recentni lokalni comparablesi nedostaju
 
 ## 8. Confidence model
 Confidence ne ovisi samo o broju rezultata, nego i o kvaliteti:
@@ -96,6 +128,32 @@ Confidence ne ovisi samo o broju rezultata, nego i o kvaliteti:
 - prisutnost exact year matcha
 - kvaliteta normalizacije
 - starost oglasa i last_seen_at signal
+- geografska blizina hrvatskom tržištu
+
+Praktični princip:
+- Croatia-first comparables povećavaju confidence najviše
+- slovenski listingi nose vrlo visok susjedni confidence signal
+- ostali jadranski listingi daju snažan regionalni fallback
+- širi mediteranski listingi ostaju korisni, ali confidence pada ako se valuation previše oslanja na udaljene ili stare usporedbe
+
+Važna razlika:
+- confidence ne pada samo zato što je podatak star
+- confidence pada zato što stariji podaci smanjuju sigurnost da valuation odražava trenutno tržišno stanje
+- stariji podaci i dalje mogu ostati korisni za range estimation
+
+## 8.1 Recency i price adjustment koncept
+Recency se ne smije svesti na jednostavno pravilo "old = penalty".
+
+Praktična podjela:
+- recentni listingi su najjači signal trenutnog tržišta
+- umjereno stari listingi ostaju validni comparables
+- stariji listingi ostaju fallback podaci korisni za range estimation
+
+U budućnosti sustav može primijeniti price adjustment koncept za starije oglase, npr.:
+- trend-based adjustment
+- category-based adjustment
+
+Ovdje se ne definira formula ni implementacija. To ostaje budući scoring/data-layer feature izvan Step 4.
 
 ## 9. Uloga web aplikacije
 Web app je primarno search and comparison interface.
@@ -106,7 +164,13 @@ Web app mora:
 - prikazati rezultate i summary raspon cijene
 - objasniti zašto su comparables odabrani
 - prikazati fallbacke, source trace i quality signale
+- prikazati kad rezultat ovisi o udaljenijim ili starijim comparablesima
 - ostati read-only prema raw i normalized operativnim slojevima u glavnom product flowu
+
+Budući output mora jasno komunicirati kad:
+- valuation više ovisi o starijim podacima
+- jaki recentni lokalni comparablesi nedostaju
+- fallback comparablesi nose veći dio range estimacije
 
 Web app nije:
 - primarni admin panel
@@ -143,5 +207,18 @@ Kad korisnik otvori rezultat, mora biti moguće vidjeti:
 - kako je standardiziran
 - je li bio ručno korigiran
 - zašto je uključen ili isključen iz valuation seta
+
+## 13. Retrieval prioritet za budući scoring
+Kad valuation-ready dataset i scoring postanu aktivni, retrieval i weighting trebaju slijediti redoslijed:
+
+`Croatia-first -> Slovenia -> Adriatic fallback -> Mediterranean fallback`
+
+To znači:
+- Hrvatska je primarni market anchor
+- Slovenija je visoko relevantan adjacent micro-market
+- ostali Jadran daje snažan regionalni fallback
+- širi Mediteran širi coverage i daje market context
+
+Ovo nije Step 4 implementacijski zadatak. Step 4 samo mora pripremiti podatke i publication granice tako da Step 5 može koristiti ove signale.
 
 Audit služi povjerenju u valuation rezultat, ali ne smije pretvoriti glavni product UI u admin panel.

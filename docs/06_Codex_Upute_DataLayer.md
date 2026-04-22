@@ -15,6 +15,11 @@ Korisnik unosi ciljano plovilo i dobiva:
 - jasnu oznaku fallbacka i kvalitete podataka
 - source trace za svaki rezultat
 
+Valuation filozofija:
+- sustav je mediteranski po coverageu
+- ali lokalno usmjeren prema hrvatskoj tržišnoj realnosti
+- Hrvatska, Slovenija i širi Jadran nose veću tržišnu relevantnost od udaljenijih mediteranskih listinga
+
 ## Product framing
 Ovo je market comparison engine i search UI za mediteranske cijene brodova.
 
@@ -53,6 +58,12 @@ Manual entry i CSV import su bootstrap/admin alati. Scraping marketplace i broke
 - business validation
 - publication u normalized i valuation-ready sloj
 
+Napomena:
+- Step 4 nakon ovog docs pass-a počinje ovdje
+- Step 4 ne implementira scoring weights, confidence model ni retrieval ranking
+- Step 4 samo priprema pipeline outpute koji će kasnije podržati geografiju, recency i confidence logiku
+- Step 4 radi na minimalnom kontroliranom data-engine sliceu, ne na punom valuation/scoring ponašanju
+
 ### Phase 3 - Scraping
 - 1 do 2 pilot marketplace/broker izvora
 - source adapters
@@ -73,6 +84,9 @@ Manual entry i CSV import su bootstrap/admin alati. Scraping marketplace i broke
 - duplicate handling
 - price history/trendovi
 - explainability poboljšanja
+- Croatia -> Slovenia -> Adriatic -> Mediterranean retrieval prioritet
+- geography-aware confidence
+- recency-aware weighting i stale fallback upozorenja
 
 ## Obavezna struktura repoa za data dio
 Predložena struktura:
@@ -99,6 +113,8 @@ Predložena struktura:
 - bez nepotrebnih biblioteka
 - preferiraj čitljiv i održiv kod
 - ne pretvaraj admin/bootstrap ručni unos u glavni product flow
+- ne implementiraj scoring, weighting ili ranking logiku u Step 4
+- pripremi pipeline output tako da kasniji scoring može vidjeti lokaciju, recency i source reliability
 
 ## Ne radi ovo
 - ne pretvaraj aplikaciju u chat sučelje
@@ -120,3 +136,18 @@ MVP je gotov tek kad:
 - UI prikazuje razlog matcha
 - source trace i quality status su vidljivi
 - dokumentacija je ažurna
+
+## Trenutni status prije Step 4
+- Step 1 je gotov
+- Step 2 je gotov
+- Step 3 je gotov
+- sljedeći rad počinje od Step 4
+
+Trenutno nije implementirano:
+- geography-aware scoring
+- recency-aware weighting
+- confidence model za Croatia / Slovenia / Adriatic / Mediterranean retrieval
+- razdvajanje price influence i confidence influence za starije listinge
+- future price adjustment koncept za starije oglase
+
+To ostaje posao za Step 5+ nakon što Step 4 završi data engine granice.
