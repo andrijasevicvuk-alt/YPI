@@ -1,14 +1,4 @@
-"""Pipeline entry point placeholder.
-
-This will later orchestrate:
-1. raw record selection
-2. extraction
-3. normalization
-4. validation
-5. dedupe
-6. quality scoring
-7. publication to normalized and valuation-ready layers
-"""
+"""Small Step 4 pipeline orchestration helpers."""
 
 from __future__ import annotations
 
@@ -47,9 +37,12 @@ def run_pipeline_for_record(
 
 
 def main() -> None:
-    raise NotImplementedError(
-        "Pipeline orchestration is not implemented yet. Wire concrete extractor/normalizer/validator/publisher components first."
-    )
+    try:
+        from ..bootstrap import main as bootstrap_main
+    except ImportError:  # pragma: no cover - fallback for direct script execution
+        from services.pipeline.bootstrap import main as bootstrap_main  # type: ignore
+
+    raise SystemExit(bootstrap_main())
 
 
 if __name__ == "__main__":

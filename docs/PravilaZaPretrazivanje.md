@@ -17,22 +17,35 @@ Ovaj dokument definira pravila pretrage, usporedbe i prikaza rezultata za intern
 - Duplicate cluster mora biti riješen prije konačnog rangiranja.
 - Niski confidence parsing mora biti vidljivo označen ili isključen prema pravilima eligibilityja.
 
-## Pravila scoringa
-- Točan builder + model = 40
-- Ista varijanta = 20
-- Ista godina = 15
-- Unutar +/- 1 godine = 10
-- Isti ownership status = 20
-- Ista konfiguracija motora = 10
-- Ista država ili podregija = 5
+## Buduća pravila scoringa
+Scoring, weighting, ranking i confidence nisu još implementirani. Detaljna scoring logika pripada Step 5+ fazi, nakon što Step 4 završi raw -> normalized pipeline, extraction, normalization, validation i publication.
+
+Budući scoring mora gledati ove signale:
+- builder/model similarity kao najvažniji signal
+- variant, year, ownership status i engine similarity kao jake dodatne signale
+- source quality, data quality i duplicate status kao uvjete pouzdanosti
+- geography prema redoslijedu `Croatia -> Slovenia -> Adriatic -> Mediterranean`
+- recency kao signal trenutnog tržišta
+
+Geografsko pravilo:
+- Hrvatska je najjači lokalni market anchor
+- Slovenija ima vrlo visoku adjacent-market relevantnost
+- Jadran je snažan regionalni fallback
+- širi Mediteran je broader fallback i market context
+
+Recency pravilo:
+- recentni listingi su najjači signal trenutnog tržišta
+- stariji listingi nisu beskorisni i mogu pomoći definirati price range, floor/ceiling i market structure
+- stariji listingi smanjuju confidence zato što su slabiji dokaz trenutnih tržišnih uvjeta
+- fallback na starije ili udaljenije podatke mora biti jasno objašnjen
 
 ## Pravila prikaza
 - Summary panel mora prikazati preporučeni raspon, medianu, prosjek, broj usporedbi i confidence.
-- Rezultati moraju imati numeric score i kratko objašnjenje.
+- Kad scoring bude implementiran, rezultati moraju imati numeric score i kratko objašnjenje.
 - Ako se koristi fallback, to mora biti jasno napisano na vrhu rezultata.
 - Korisnik mora moći otvoriti detalj i vidjeti source trace i osnovni quality status.
 
 ## Pravila razvoja
 - Svaka promjena pravila mora biti evidentirana u GitHub repou.
-- Ako se scoring promijeni, mora se ažurirati dokumentacija i testovi.
+- Kad se scoring uvede ili promijeni, mora se ažurirati dokumentacija i testovi.
 - Ako se promijene mapping pravila za builder/model/variant, mora postojati regression test ili fixture primjer.
