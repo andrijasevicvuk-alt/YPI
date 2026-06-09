@@ -146,7 +146,8 @@ Trenutni status:
 - Step 1 je završen
 - Step 2 je završen
 - Step 3 je završen
-- sljedeći implementacijski rad počinje od Step 4
+- Step 4 je funkcionalno verificiran lokalno za minimalni bootstrap raw-to-normalized pipeline
+- sljedeći implementacijski rad ne smije preskočiti valuation-ready granice i Step 5+ scoring odluke
 
 ### Phase 1 - Foundation (već napravljeno)
 Cilj:
@@ -172,10 +173,27 @@ Cilj:
 Bez ovog sloja search UI i scoring ne smiju postati glavni product.
 
 U praktičnom redoslijedu rada to znači:
-- Step 4 počinje ovdje
+- Step 4 je završen samo za minimalni bootstrap/pilot slice
 - Step 4 ostaje fokusiran na extraction, normalization, validation i publication granice
-- Step 4 radi nad minimalnim bootstrap/pilot podacima i kontroliranim source kombinacijama
+- Step 4 radi nad minimalnim bootstrap podacima, ne nad punim scraping rolloutom
 - geografski weights, recency weights i ranking logika još se ne implementiraju u ovom koraku
+
+Verificirani Step 4 tok:
+
+`raw_listings -> extraction -> normalization -> validation -> boats + listings`
+
+Ponovljiva provjera nalazi se u `docs/10_Verifikacija_Step4_BootstrapPipeline.md` i `supabase/verify_step4_bootstrap_pipeline.sql`.
+
+Tehnički dug Step 4:
+- publication trenutno koristi više Supabase REST poziva i nije atomska transakcija
+- prije većeg ingestion volumena treba dodati transakcijski publication hardening ili recovery ponašanje
+
+Step 4D deferred hardening:
+- Step 4 je zatvoren za MVP bootstrap data engine nakon 4A/4B/4C
+- Step 4D nije potreban za pocetak Step 5 planiranja, dok god Step 5 ne uvodi scraper volume ili non-local deployment
+- atomic publication RPC/function i partial-publication recovery postaju obavezni prije scheduled scrapinga, large batch ingestiona ili produkcijske upotrebe
+- production auth/RLS/security implementacija postaje obavezna prije bilo kakvog non-local deploya
+- Step 4D se ne smije tretirati kao zaboravljen posao; to su eksplicitni future gates
 
 ### Phase 3 - Scraping (1-2 izvora prvo)
 Cilj:

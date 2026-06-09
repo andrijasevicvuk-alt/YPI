@@ -20,8 +20,10 @@ export function createServerQueryLayer(): QueryLayer {
     readEnv(process.env.SUPABASE_SERVICE_ROLE_KEY) ??
     readEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
-  console.log("URL:", projectUrl);
-  console.log("KEY exists:", !!apiKey);
+  if (process.env.YPI_DEBUG_ENV === "1") {
+    console.log("Supabase URL configured:", !!projectUrl);
+    console.log("Supabase API key configured:", !!apiKey);
+  }
 
   if (!projectUrl || !apiKey) {
     throw new Error(

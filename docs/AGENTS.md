@@ -37,6 +37,7 @@ Manual entry i CSV import postoje kao bootstrap/admin alati, ali nisu core produ
 - rad po feature branch principu
 - mali i logični commitovi
 - dokumentacija mora biti ažurna uz svaku veću promjenu
+- security i operativne granice nalaze se u `docs/11_Security_Operations.md`
 - migracije moraju biti verzionirane
 - ne uvoditi nepotrebne biblioteke
 - preferirati čitljiv i održiv kod
@@ -65,8 +66,9 @@ Manual entry i CSV import postoje kao bootstrap/admin alati, ali nisu core produ
 - svaki izvor mora imati source registry zapis
 - duplicate handling i quality scoring su obavezni prije ozbiljnog product scoringa
 - svaka promjena mapping pravila mora biti testabilna
-- Step 4 ne uvodi scoring ni weighting; samo priprema pipeline outpute za kasniji scoring
+- Step 4 ne uvodi scoring ni weighting; verificiran je samo minimalni bootstrap raw-to-normalized pipeline
 - geography-aware i recency-aware logika pripadaju Step 5+
+- Step 4 publication trenutno nije atomska transakcija jer koristi više Supabase REST poziva; to je hardening dug prije većeg ingestion volumena
 
 ## Done znači
 - aplikacija se može pokrenuti lokalno
@@ -83,4 +85,6 @@ Manual entry i CSV import postoje kao bootstrap/admin alati, ali nisu core produ
 - Step 1 gotov
 - Step 2 gotov
 - Step 3 gotov
-- sljedeći rad počinje od Step 4
+- Step 4 gotov samo za minimalni bootstrap raw-to-normalized pipeline
+- scoring, valuation-ready search UI, scraping adapteri, geography weighting, recency weighting i confidence model ostaju Step 5+ / kasnije faze
+- prije non-local deploya obavezno proÄitati i zadovoljiti `docs/11_Security_Operations.md`

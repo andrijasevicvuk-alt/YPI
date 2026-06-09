@@ -187,6 +187,6 @@ Dovoljno je:
 - manual entry i CSV import kao bootstrap/admin fallback, ne kao core product
 
 Napomena o koracima:
-- Step 4 nakon ovog docs pass-a još ne implementira scoring ni weighting pravila
-- Step 4 mora pripremiti pipeline i source readiness
+- Step 4 je lokalno verificiran za minimalni bootstrap raw-to-normalized pipeline i još ne implementira scoring ni weighting pravila
+- Step 4 nije puni scraping/data-engine rollout
 - geography-aware scoring i recency-aware confidence pripadaju Step 5+

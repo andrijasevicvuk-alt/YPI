@@ -63,7 +63,7 @@ Nakon ovog docs pass-a status je:
 - Step 1 završen
 - Step 2 završen
 - Step 3 završen
-- sljedeći implementacijski rad počinje od Step 4
+- Step 4 funkcionalno verificiran lokalno za minimalni bootstrap raw-to-normalized pipeline
 
 ## Trenutni raw ingestion flow za manual entry
 Aktivni tok za manual entry sada izgleda ovako:
@@ -73,9 +73,14 @@ Aktivni tok za manual entry sada izgleda ovako:
 Bitna pravila:
 - source trace ostaje jasan kroz `source_sites`, `acquisition_method = manual_entry` i payload metadata `origin = manual_entry`
 - manual entry ostaje audit-first bootstrap input, ne business-safe normalized zapis
-- normalized tablice postoje kao cilj publication faze, ali ih Step 3 još ne puni automatski
+- Step 4 pipeline minimalno puni `boats` i `listings` iz pending raw zapisa, ali valuation-ready product layer još nije implementiran
 
 ## Što ostaje stubano
+Step 4 clarification:
+- minimalni bootstrap pipeline sada lokalno verificirano puni `boats` i `listings` iz pending raw zapisa
+- to ne znaci da je valuation-ready product layer implementiran
+- scoring, scraping adapteri i search/comparison UI ostaju kasnije faze
+
 Namjerno nije implementirano u ovoj fazi:
 - puna ekstrakcija polja iz raw payloada
 - canonical mapping logika za builder/model/variant
@@ -99,11 +104,16 @@ Scaffold, raw ingestion temelj, source registry, normalized core schema, manual 
 ### Phase 2 - Data engine
 Implementirati raw -> normalized pipeline, canonical mapping, normalization, validation i publication u valuation-ready sloj.
 
-Ovo je sljedeći korak rada:
-- Step 4 počinje ovdje
+Trenutni status Phase 2 rada:
+- Step 4 je verificiran za minimalni bootstrap raw-to-normalized slice
 - Step 4 ostaje fokusiran na extraction, normalization, validation i publication
 - Step 4 koristi minimalne bootstrap/pilot podatke i kontrolirane source kombinacije za provjeru pipelinea
 - Step 4 ne implementira scoring weights ni ranking logiku
+
+Napomena nakon lokalne verifikacije:
+- Step 4 je sada funkcionalno verificiran samo za minimalni bootstrap raw-to-normalized pipeline
+- scoring, valuation-ready search UI, geography weighting, recency weighting i confidence model ostaju Step 5+ / kasnije faze
+- publication trenutno koristi više Supabase REST poziva i nije atomska transakcija; to je hardening dug prije većeg ingestion volumena
 
 ### Phase 3 - Scraping
 Uvesti 1 do 2 marketplace/broker izvora, napraviti adaptere, raw snapshots, parser fixtures i povezati ih s pipelineom.

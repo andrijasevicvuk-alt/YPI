@@ -160,14 +160,16 @@ Pipeline mora na kraju dati:
 - exclusion reason ako zapis nije spreman za valuation
 
 ## 7. Trenutni status implementacije
-Step 3 uvodi ugovore, ali ne i punu logiku pipelinea.
+Step 4 je funkcionalno verificiran lokalno za minimalni bootstrap raw-to-normalized pipeline.
 
 Trenutno postoje:
 - `services/pipeline/contracts.py`
+- `services/pipeline/bootstrap.py`
 - `services/pipeline/extract`
 - `services/pipeline/normalizers`
 - `services/pipeline/validators`
 - `services/pipeline/publish`
+- `supabase/verify_step4_bootstrap_pipeline.sql`
 
 Ti ugovori definiraju:
 - ulazni `RawListingEnvelope`
@@ -175,6 +177,39 @@ Ti ugovori definiraju:
 - `Normalizer` za prijelaz u normalized candidate objekte
 - `Validator` za business i quality provjere
 - `Publisher` za upis u normalized core tablice
+- status promjenu `pending -> processed` za validne zapise
+- status promjenu `pending -> failed` i `ingest_errors` zapis za nevalidne zapise
+- lineage kroz `boats.primary_raw_listing_id` i `listings.raw_listing_id`
+
+Ovaj slice objavljuje samo u `boats` i `listings`. Ne objavljuje valuation-ready dataset i ne implementira scoring.
+
+Tehnički dug:
+- publication trenutno koristi više Supabase REST poziva i nije atomska transakcija
+- prije većeg ingestion volumena treba dodati transakcijski publication hardening ili recovery ponašanje
+
+### Known limitation: publication is not atomic
+Trenutni Step 4 publisher koristi vise Supabase REST poziva. To je prihvatljivo za lokalnu bootstrap verifikaciju, ali nije dovoljno sigurno za veci ingestion volume ili scraper-driven ingestion.
+
+Moguci partial failure scenariji:
+- builder/model se upisu, ali boat ili listing faila
+- boat se upise, ali listing faila
+- listing se upise, ali raw status update faila
+- raw se oznaci kao `failed` nakon sto partial normalized rows vec postoje
+
+Trenutne mitigacije:
+- `listings.raw_listing_id` ima unique constraint
+- builder/model/variant resolver koristi postojece canonical rows kad postoje
+- boat idempotency postoji u kodu kroz `primary_raw_listing_id` lookup
+- Step 4C dodaje DB-level partial unique index na `boats.primary_raw_listing_id` za non-null vrijednosti
+
+Nedostaje:
+- DB transakcija preko cijelog publication toka
+- formalna partial-publication recovery procedura
+
+Future hardening prije scraping volumena:
+- premjestiti publication u PostgreSQL RPC/funkciju ili ekvivalentnu transactional boundary
+- razmotriti DB-level uniqueness na `boats.primary_raw_listing_id`
+- dodati recovery/idempotency smoke checks
 
 ## 8. Trenutni operativni boundary nakon Step 3
 Manual entry je pomoćni admin/bootstrap ulaz koji sada puni raw sloj kroz aplikaciju, ali publication ostaje odvojen.
@@ -183,6 +218,7 @@ Aktivni tok:
 1. admin unese kontrolirani bootstrap zapis kroz app
 2. payload se sprema u `raw_listings` i `worker_manual_entries`
 3. record ostaje u `pending` statusu
-4. sljedeca faza ce napraviti extraction -> normalization -> validation -> publication
+4. Step 4 pipeline radi extraction -> normalization -> validation -> publication
+5. validni zapis dobiva `processed`, a nevalidni `failed` i `ingest_errors`
 
 Time ostaje ocuvano glavno pravilo projekta da raw podaci ne idu direktno u normalized ili valuation-ready sloj bez kontrolirane obrade.

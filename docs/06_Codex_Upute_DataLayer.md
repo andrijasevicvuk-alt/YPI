@@ -59,10 +59,11 @@ Manual entry i CSV import su bootstrap/admin alati. Scraping marketplace i broke
 - publication u normalized i valuation-ready sloj
 
 Napomena:
-- Step 4 nakon ovog docs pass-a počinje ovdje
+- Step 4 je funkcionalno verificiran lokalno za minimalni bootstrap raw-to-normalized slice
 - Step 4 ne implementira scoring weights, confidence model ni retrieval ranking
 - Step 4 samo priprema pipeline outpute koji će kasnije podržati geografiju, recency i confidence logiku
 - Step 4 radi na minimalnom kontroliranom data-engine sliceu, ne na punom valuation/scoring ponašanju
+- Step 4 provjera je dokumentirana u `docs/10_Verifikacija_Step4_BootstrapPipeline.md`
 
 ### Phase 3 - Scraping
 - 1 do 2 pilot marketplace/broker izvora
@@ -116,6 +117,19 @@ Predložena struktura:
 - ne implementiraj scoring, weighting ili ranking logiku u Step 4
 - pripremi pipeline output tako da kasniji scoring može vidjeti lokaciju, recency i source reliability
 
+## Step 4D future gates za Codex
+Step 4D je namjerno deferred hardening, ali nije zaboravljen posao.
+
+Pravila za buduće Codex sesije:
+- ne pokretati scraper volume prije atomic publication/recovery hardeninga
+- ne uvoditi large batch ingestion prije partial-publication recovery plana
+- ne deployati non-local prije security gates iz `docs/11_Security_Operations.md`
+- ne koristiti service role key client-side
+- ne zaobilaziti `raw -> pipeline -> normalized` tok
+- ne tretirati Step 4D kao Step 5 scoring posao
+
+Step 5 planiranje smije početi bez Step 4D implementacije samo ako ne uvodi produkcijski deploy, scheduled scraping volume ili large batch ingestion.
+
 ## Ne radi ovo
 - ne pretvaraj aplikaciju u chat sučelje
 - ne uvodi kompleksni search engine prije valuation-ready sloja
@@ -137,17 +151,24 @@ MVP je gotov tek kad:
 - source trace i quality status su vidljivi
 - dokumentacija je ažurna
 
-## Trenutni status prije Step 4
+## Trenutni status nakon Step 4
 - Step 1 je gotov
 - Step 2 je gotov
 - Step 3 je gotov
-- sljedeći rad počinje od Step 4
+- Step 4 je gotov samo za minimalni bootstrap raw-to-normalized pipeline
 
 Trenutno nije implementirano:
+- scraping adapteri
+- valuation-ready publication kao product/query sloj
+- search/comparison UI nad valuation-ready slojem
 - geography-aware scoring
 - recency-aware weighting
 - confidence model za Croatia / Slovenia / Adriatic / Mediterranean retrieval
 - razdvajanje price influence i confidence influence za starije listinge
 - future price adjustment koncept za starije oglase
 
-To ostaje posao za Step 5+ nakon što Step 4 završi data engine granice.
+To ostaje posao za Step 5+ i kasnije faze nakon minimalno verificiranog Step 4 pipelinea.
+
+Tehnički dug:
+- Step 4 publication trenutno koristi više Supabase REST poziva i nije atomska transakcija
+- prije većeg ingestion volumena treba dodati transakcijski publication hardening ili recovery ponašanje

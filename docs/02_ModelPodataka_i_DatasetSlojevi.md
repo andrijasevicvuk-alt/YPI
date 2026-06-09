@@ -170,8 +170,8 @@ Web app mora moci:
 
 Zato aplikacija i scoring motor ne smiju ovisiti o neobradenim izvorima.
 
-## 8. Trenutna MVP schema nakon Step 3
-Step 3 sada uvodi minimalni normalized core schema koji ostaje uskladen s pravilom `raw -> normalized -> valuation-ready`.
+## 8. Trenutna MVP schema nakon Step 4
+Step 3 uvodi minimalni normalized core schema, a Step 4 je lokalno verificirao minimalni bootstrap publication tok prema `boats` i `listings`. Arhitektura ostaje uskladena s pravilom `raw -> normalized -> valuation-ready`.
 
 Dodane normalized core tablice:
 - `boats`
@@ -197,4 +197,5 @@ Dodane rane mapping/reference tablice:
 Bitan lineage detalj:
 - `listings.raw_listing_id` veze normalized listing natrag na raw zapis
 - manual entry jos uvijek prvo puni `raw_listings` i `worker_manual_entries`
-- normalized tablice postoje kao publication cilj, ali ih Step 3 jos ne puni automatski
+- Step 4 pipeline cita pending raw zapise i minimalno puni `boats` i `listings`
+- valuation-ready sloj, scoring i search/comparison UI jos nisu implementirani
