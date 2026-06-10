@@ -1,8 +1,9 @@
 import type {
+  ComparableCandidateQuery,
+  ComparableCandidateResult,
   ManualEntryDraft,
   ManualEntrySubmissionReceipt,
-  SourceRegistryEntry,
-  ValuationComparable
+  SourceRegistryEntry
 } from "@ypi/domain";
 
 export interface RawIngestionRepository {
@@ -13,7 +14,9 @@ export interface RawIngestionRepository {
 }
 
 export interface ValuationReadyRepository {
-  listComparableCandidates(): Promise<ValuationComparable[]>;
+  listComparableCandidates(
+    query: ComparableCandidateQuery
+  ): Promise<ComparableCandidateResult>;
 }
 
 export interface QueryLayer {
@@ -163,8 +166,11 @@ export function createSupabaseRestQueryLayer(
       }
     },
     valuationReady: {
-      async listComparableCandidates() {
-        return [];
+      async listComparableCandidates(query) {
+        return {
+          target: query.target,
+          candidates: []
+        };
       }
     }
   };
@@ -181,8 +187,11 @@ export function createUnconfiguredQueryLayer(): QueryLayer {
       }
     },
     valuationReady: {
-      async listComparableCandidates() {
-        return [];
+      async listComparableCandidates(query) {
+        return {
+          target: query.target,
+          candidates: []
+        };
       }
     }
   };

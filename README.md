@@ -17,6 +17,7 @@ Za daljnji rad koristi samo dokumente u mapi `docs/`.
 - `docs/09_Croatia_Adriatic_Mediterranean_Valuation_Strategy.md` - valuation filozofija za hrvatski / jadranski / mediteranski market anchor
 - `docs/10_Verifikacija_Step4_BootstrapPipeline.md` - smoke provjera minimalnog Step 4 raw-to-normalized bootstrap pipelinea
 - `docs/11_Security_Operations.md` - security i operativna pravila za lokalni, interni i budući non-local rad
+- `docs/12_Step5_ValuationReady_Contract.md` - Step 5A/5B valuation-ready comparable contract i minimalni SQL view boundary
 - `docs/AGENTS.md` - operativna pravila projekta
 - `docs/PravilaZaPretrazivanje.md` - pravila pretrage, scoringa i prikaza
 - `docs/PromptoviZaCodex.md` - paket promptova za implementaciju

@@ -189,18 +189,91 @@ export interface WorkerNoteRecord {
   createdAt: string;
 }
 
-export interface ValuationComparable {
+export type YearMatchBucket =
+  | "exact"
+  | "nearby"
+  | "fallback"
+  | "unknown"
+  | "not_evaluated";
+
+export type GeographyBucket =
+  | "croatia"
+  | "slovenia"
+  | "adriatic"
+  | "mediterranean"
+  | "unknown"
+  | "not_evaluated";
+
+export type RecencyBucket =
+  | "recent"
+  | "moderate"
+  | "older"
+  | "unknown"
+  | "not_evaluated";
+
+export type DuplicateSignal =
+  | "unique"
+  | "possible_duplicate"
+  | "duplicate_clustered"
+  | "unknown"
+  | "not_evaluated";
+
+export interface ValuationReadyComparable {
   comparableId: string;
-  canonicalBuilder: string;
-  canonicalModel: string;
+  boatId: string;
+  listingId: string;
+  rawListingId: string;
+  sourceSiteId: string;
+  sourceListingKey: string | null;
+  listingUrl: string | null;
+  createdFromNormalizedLineage: boolean;
+  builderId: string | null;
+  canonicalBuilder: string | null;
+  modelId: string | null;
+  canonicalModel: string | null;
+  variantId: string | null;
   canonicalVariant: string | null;
   yearBuilt: number | null;
-  ownershipStatus: string | null;
+  yearMatchBucket: YearMatchBucket;
+  ownershipStatusCode: OwnershipStatus | null;
+  askingPrice: number | null;
+  currency: string | null;
+  priceEur: number | null;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  listingStatus: NormalizedListingStatus;
+  publicationStatus: "draft" | "published" | "review_required" | "rejected";
+  countryCode: string | null;
+  locationRegionId: string | null;
   locationBucket: string | null;
-  priceEur: number;
+  marinaOrCity: string | null;
+  geographyBucket: GeographyBucket;
   sourceName: string;
-  sourceReliabilityScore: number;
-  dataQualityScore: number;
-  comparableEligibility: boolean;
+  sourceReliabilityScore: number | null;
+  dataQualityScore: number | null;
+  comparableEligible: boolean;
   exclusionReason: string | null;
+  recencyBucket: RecencyBucket;
+  duplicateSignal: DuplicateSignal;
+}
+
+export type ValuationComparable = ValuationReadyComparable;
+
+export interface TargetBoatInput {
+  builderId: string;
+  modelId: string;
+  variantId?: string | null;
+  yearBuilt?: number | null;
+  ownershipStatusCode?: OwnershipStatus | null;
+}
+
+export interface ComparableCandidateQuery {
+  target: TargetBoatInput;
+  includeVariantOnly?: boolean;
+  limit?: number;
+}
+
+export interface ComparableCandidateResult {
+  target: TargetBoatInput;
+  candidates: ValuationReadyComparable[];
 }
