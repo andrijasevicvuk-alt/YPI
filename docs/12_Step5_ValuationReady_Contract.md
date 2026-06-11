@@ -382,3 +382,61 @@ Ova polja postoje da Step 5C/D/E mogu raditi nad stabilnim payloadom, ali ne pre
 - `null` if eligible
 
 Stariji listingi se ne iskljucuju samo zbog starosti. Recency ostaje signal za kasniji confidence/scoring, ne Step 5B filter.
+
+## 16. Step 5C implementation status
+Step 5C implementira data-access query:
+
+`ValuationReadyRepository.listComparableCandidates(query)`
+
+U configured Supabase query layeru metoda cita samo:
+
+`public.valuation_ready_comparables`
+
+Metoda ne cita:
+- `raw_listings`
+- `boats`
+- `listings`
+- druge normalized tablice direktno
+
+To cuva boundary:
+
+`normalized -> valuation-ready -> data-access`
+
+## 17. Step 5C query filters
+Step 5C koristi samo sigurne candidate-selection filtere:
+- `comparable_eligible = true`
+- `publication_status = published`
+- `listing_status = active`
+- `price_eur is not null`
+- `builder_id = target.builderId`
+- `model_id = target.modelId`
+- `variant_id = target.variantId` only when `variantId` is provided
+
+`limit` se primjenjuje s default vrijednoscu i max capom u data-access sloju.
+
+Step 5C ne implementira:
+- scoring
+- ranking
+- confidence model
+- geography weighting
+- recency weighting
+- valuation range calculation
+
+## 18. Step 5C deterministic ordering
+Step 5C koristi deterministicki order samo radi stabilnog outputa:
+- `last_seen_at desc`
+- `first_seen_at desc`
+- `listing_id asc`
+
+Ovo nije valuation ranking i ne smije se tretirati kao scoring.
+
+## 19. Step 5C mapping behavior
+SQL rowovi se mapiraju u `ValuationReadyComparable`.
+
+Mapping pravila:
+- nullable SQL fieldovi ostaju `null`
+- placeholder bucketi kao `not_evaluated` ostaju nepromijenjeni
+- numeric values se mapiraju u `number | null`
+- `data_quality_score`, `country_code`, `location_region_id` i slicni nezreli signali ne dobivaju fake vrijednosti
+
+Step 5D ce formalnije definirati retrieval filter behavior, a Step 5E scoring contract. Scoring formule ostaju izvan Step 5C.

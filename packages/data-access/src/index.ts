@@ -1,9 +1,16 @@
 import type {
   ComparableCandidateQuery,
   ComparableCandidateResult,
+  DuplicateSignal,
+  GeographyBucket,
   ManualEntryDraft,
   ManualEntrySubmissionReceipt,
-  SourceRegistryEntry
+  NormalizedListingStatus,
+  OwnershipStatus,
+  RecencyBucket,
+  SourceRegistryEntry,
+  ValuationReadyComparable,
+  YearMatchBucket
 } from "@ypi/domain";
 
 export interface RawIngestionRepository {
@@ -46,6 +53,87 @@ interface SourceSiteRow {
   is_active: boolean;
   notes: string | null;
 }
+
+interface ValuationReadyComparableRow {
+  comparable_id: string;
+  boat_id: string;
+  listing_id: string;
+  raw_listing_id: string;
+  source_site_id: string;
+  source_name: string;
+  source_listing_key: string | null;
+  listing_url: string | null;
+  created_from_normalized_lineage: boolean;
+  builder_id: string | null;
+  canonical_builder: string | null;
+  model_id: string | null;
+  canonical_model: string | null;
+  variant_id: string | null;
+  canonical_variant: string | null;
+  year_built: number | null;
+  year_match_bucket: YearMatchBucket;
+  ownership_status_code: OwnershipStatus | null;
+  asking_price: number | string | null;
+  currency: string | null;
+  price_eur: number | string | null;
+  first_seen_at: string;
+  last_seen_at: string;
+  listing_status: NormalizedListingStatus;
+  publication_status: ValuationReadyComparable["publicationStatus"];
+  country_code: string | null;
+  location_region_id: string | null;
+  location_bucket: string | null;
+  marina_or_city: string | null;
+  geography_bucket: GeographyBucket;
+  source_reliability_score: number | string | null;
+  data_quality_score: number | string | null;
+  comparable_eligible: boolean;
+  exclusion_reason: string | null;
+  recency_bucket: RecencyBucket;
+  duplicate_signal: DuplicateSignal;
+}
+
+const VALUATION_READY_SELECT_COLUMNS = [
+  "comparable_id",
+  "boat_id",
+  "listing_id",
+  "raw_listing_id",
+  "source_site_id",
+  "source_name",
+  "source_listing_key",
+  "listing_url",
+  "created_from_normalized_lineage",
+  "builder_id",
+  "canonical_builder",
+  "model_id",
+  "canonical_model",
+  "variant_id",
+  "canonical_variant",
+  "year_built",
+  "year_match_bucket",
+  "ownership_status_code",
+  "asking_price",
+  "currency",
+  "price_eur",
+  "first_seen_at",
+  "last_seen_at",
+  "listing_status",
+  "publication_status",
+  "country_code",
+  "location_region_id",
+  "location_bucket",
+  "marina_or_city",
+  "geography_bucket",
+  "source_reliability_score",
+  "data_quality_score",
+  "comparable_eligible",
+  "exclusion_reason",
+  "recency_bucket",
+  "duplicate_signal"
+] as const;
+
+const DEFAULT_COMPARABLE_LIMIT = 50;
+const MAX_COMPARABLE_LIMIT = 200;
 
 function createHeaders(config: SupabaseRestConfig): HeadersInit {
   return {
@@ -119,6 +207,88 @@ function toSourceRegistryEntry(row: SourceSiteRow): SourceRegistryEntry {
   };
 }
 
+function toNumberOrNull(value: number | string | null): number | null {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value === "number") {
+    return value;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function clampComparableLimit(limit: number | undefined): number {
+  if (limit === undefined || !Number.isFinite(limit)) {
+    return DEFAULT_COMPARABLE_LIMIT;
+  }
+
+  return Math.max(1, Math.min(Math.trunc(limit), MAX_COMPARABLE_LIMIT));
+}
+
+function buildComparableCandidatesPath(query: ComparableCandidateQuery): string {
+  const params = new URLSearchParams({
+    select: VALUATION_READY_SELECT_COLUMNS.join(","),
+    comparable_eligible: "eq.true",
+    publication_status: "eq.published",
+    listing_status: "eq.active",
+    price_eur: "not.is.null",
+    builder_id: `eq.${query.target.builderId}`,
+    model_id: `eq.${query.target.modelId}`,
+    order: "last_seen_at.desc.nullslast,first_seen_at.desc.nullslast,listing_id.asc",
+    limit: String(clampComparableLimit(query.limit))
+  });
+
+  if (query.target.variantId) {
+    params.set("variant_id", `eq.${query.target.variantId}`);
+  }
+
+  return `/rest/v1/valuation_ready_comparables?${params.toString()}`;
+}
+
+function toValuationReadyComparable(
+  row: ValuationReadyComparableRow
+): ValuationReadyComparable {
+  return {
+    comparableId: row.comparable_id,
+    boatId: row.boat_id,
+    listingId: row.listing_id,
+    rawListingId: row.raw_listing_id,
+    sourceSiteId: row.source_site_id,
+    sourceListingKey: row.source_listing_key,
+    listingUrl: row.listing_url,
+    createdFromNormalizedLineage: row.created_from_normalized_lineage,
+    builderId: row.builder_id,
+    canonicalBuilder: row.canonical_builder,
+    modelId: row.model_id,
+    canonicalModel: row.canonical_model,
+    variantId: row.variant_id,
+    canonicalVariant: row.canonical_variant,
+    yearBuilt: row.year_built,
+    yearMatchBucket: row.year_match_bucket,
+    ownershipStatusCode: row.ownership_status_code,
+    askingPrice: toNumberOrNull(row.asking_price),
+    currency: row.currency,
+    priceEur: toNumberOrNull(row.price_eur),
+    firstSeenAt: row.first_seen_at,
+    lastSeenAt: row.last_seen_at,
+    listingStatus: row.listing_status,
+    publicationStatus: row.publication_status,
+    countryCode: row.country_code,
+    locationRegionId: row.location_region_id,
+    locationBucket: row.location_bucket,
+    marinaOrCity: row.marina_or_city,
+    geographyBucket: row.geography_bucket,
+    sourceName: row.source_name,
+    sourceReliabilityScore: toNumberOrNull(row.source_reliability_score),
+    dataQualityScore: toNumberOrNull(row.data_quality_score),
+    comparableEligible: row.comparable_eligible,
+    exclusionReason: row.exclusion_reason,
+    recencyBucket: row.recency_bucket,
+    duplicateSignal: row.duplicate_signal
+  };
+}
+
 export function createSupabaseRestQueryLayer(
   config: SupabaseRestConfig
 ): QueryLayer {
@@ -167,9 +337,17 @@ export function createSupabaseRestQueryLayer(
     },
     valuationReady: {
       async listComparableCandidates(query) {
+        const rows = await requestJson<ValuationReadyComparableRow[]>(
+          config,
+          buildComparableCandidatesPath(query),
+          {
+            method: "GET"
+          }
+        );
+
         return {
           target: query.target,
-          candidates: []
+          candidates: rows.map(toValuationReadyComparable)
         };
       }
     }

@@ -67,7 +67,7 @@ Manual entry i CSV import postoje kao bootstrap/admin alati, ali nisu core produ
 - duplicate handling i quality scoring su obavezni prije ozbiljnog product scoringa
 - svaka promjena mapping pravila mora biti testabilna
 - Step 4 ne uvodi scoring ni weighting; verificiran je samo minimalni bootstrap raw-to-normalized pipeline
-- Step 5A je contract/design za valuation-ready comparable sloj; Step 5B uvodi prvi minimalni read-only SQL view
+- Step 5A je contract/design za valuation-ready comparable sloj; Step 5B uvodi prvi minimalni read-only SQL view; Step 5C uvodi data-access query bez scoringa
 - geography-aware i recency-aware logika pripadaju Step 5+
 - Step 4 publication trenutno nije atomska transakcija jer koristi više Supabase REST poziva; to je hardening dug prije većeg ingestion volumena
 
@@ -87,6 +87,6 @@ Manual entry i CSV import postoje kao bootstrap/admin alati, ali nisu core produ
 - Step 2 gotov
 - Step 3 gotov
 - Step 4 gotov samo za minimalni bootstrap raw-to-normalized pipeline
-- Step 5A definira valuation-ready comparable contract, a Step 5B uvodi minimalni SQL view bez data-access queryja, scoringa, scrapinga ili UI-ja
+- Step 5A definira valuation-ready comparable contract, Step 5B uvodi minimalni SQL view, a Step 5C uvodi data-access query bez scoringa, scrapinga ili UI-ja
 - scoring, valuation-ready search UI, scraping adapteri, geography weighting, recency weighting i confidence model ostaju Step 5+ / kasnije faze
 - prije non-local deploya obavezno proÄitati i zadovoljiti `docs/11_Security_Operations.md`
