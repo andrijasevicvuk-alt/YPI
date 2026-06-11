@@ -129,4 +129,17 @@ Važna granica:
 - Step 4 radi nad minimalnim kontroliranim podacima i pilot source kombinacijama
 - Step 4 ne implementira scoring, weighting ni ranking logiku
 
+## 9. Future retrieval tiers i confidence
+Buduci confidence model mora razlikovati vrste comparable kandidata, ne samo geografiju i recency.
+
+Retrieval tierovi koje scoring/confidence kasnije mora jasno razlikovati:
+- exact model comparables
+- related model / variant comparables
+- cross-builder / spec-similar comparables
+- broad market fallback comparables
+
+Cross-builder/spec-similar comparables su mandatory future retrieval funkcionalnost, ali nisu aktivni u Step 5D. Oni smiju uci u buduci retrieval tek kad postoje pouzdani structured spec fields, npr. LOA, beam, boat category, cabin layout, ownership/use profile, engine/spec profile, geography bucket i quality/source signali.
+
+Geografija ostaje Croatia -> Slovenia -> Adriatic -> Mediterranean market anchor, ali spec-similarity tier mora biti zasebno objasnjen. Slicna cijena i godina nisu dovoljni razlozi za cross-builder comparison.
+
 Ove smjernice služe da Step 4 pripremi podatke i signalne atribute, a Step 5 kasnije može provesti scoring i confidence pravila bez promjene arhitekture.

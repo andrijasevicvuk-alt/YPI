@@ -1,4 +1,5 @@
 import type {
+  ComparableCandidate,
   ComparableCandidateQuery,
   ComparableCandidateResult,
   DuplicateSignal,
@@ -10,6 +11,8 @@ import type {
   RecencyBucket,
   SourceRegistryEntry,
   ValuationReadyComparable,
+  VariantMatch,
+  VariantRetrievalBehavior,
   YearMatchBucket
 } from "@ypi/domain";
 
@@ -134,6 +137,14 @@ const VALUATION_READY_SELECT_COLUMNS = [
 
 const DEFAULT_COMPARABLE_LIMIT = 50;
 const MAX_COMPARABLE_LIMIT = 200;
+const NEAR_YEAR_DELTA = 2;
+
+interface ComparableQueryPlan {
+  path: string;
+  filtersApplied: string[];
+  retrievalNotes: string[];
+  variantBehavior: VariantRetrievalBehavior;
+}
 
 function createHeaders(config: SupabaseRestConfig): HeadersInit {
   return {
@@ -226,7 +237,38 @@ function clampComparableLimit(limit: number | undefined): number {
   return Math.max(1, Math.min(Math.trunc(limit), MAX_COMPARABLE_LIMIT));
 }
 
-function buildComparableCandidatesPath(query: ComparableCandidateQuery): string {
+function resolveVariantBehavior(
+  query: ComparableCandidateQuery
+): VariantRetrievalBehavior {
+  if (query.includeVariantOnly) {
+    return "exact_variant_only";
+  }
+
+  return query.variantBehavior ?? "prefer_variant_match";
+}
+
+function normalizeMaxYearDelta(value: number | undefined): number | null {
+  if (value === undefined || !Number.isFinite(value)) {
+    return null;
+  }
+
+  return Math.max(0, Math.trunc(value));
+}
+
+function buildComparableCandidatesQueryPlan(
+  query: ComparableCandidateQuery
+): ComparableQueryPlan {
+  const filtersApplied = [
+    "comparable_eligible",
+    "published",
+    "active",
+    "price_eur_present",
+    "same_builder",
+    "same_model"
+  ];
+  const retrievalNotes: string[] = [];
+  const variantBehavior = resolveVariantBehavior(query);
+  const maxYearDelta = normalizeMaxYearDelta(query.maxYearDelta);
   const params = new URLSearchParams({
     select: VALUATION_READY_SELECT_COLUMNS.join(","),
     comparable_eligible: "eq.true",
@@ -239,16 +281,92 @@ function buildComparableCandidatesPath(query: ComparableCandidateQuery): string 
     limit: String(clampComparableLimit(query.limit))
   });
 
-  if (query.target.variantId) {
+  if (variantBehavior === "exact_variant_only" && query.target.variantId) {
     params.set("variant_id", `eq.${query.target.variantId}`);
+    filtersApplied.push("exact_variant");
+  } else if (variantBehavior === "exact_variant_only") {
+    retrievalNotes.push(
+      "exact_variant_only requested without target.variantId; variant filter was not applied."
+    );
+  } else if (variantBehavior === "prefer_variant_match") {
+    retrievalNotes.push(
+      "Variant matches are annotated but not used as a scoring or ranking formula."
+    );
   }
 
-  return `/rest/v1/valuation_ready_comparables?${params.toString()}`;
+  if (maxYearDelta !== null && query.target.yearBuilt !== null && query.target.yearBuilt !== undefined) {
+    params.append("year_built", `gte.${query.target.yearBuilt - maxYearDelta}`);
+    params.append("year_built", `lte.${query.target.yearBuilt + maxYearDelta}`);
+    filtersApplied.push("max_year_delta");
+  } else if (maxYearDelta !== null) {
+    retrievalNotes.push(
+      "maxYearDelta requested without target.yearBuilt; year filter was not applied."
+    );
+  }
+
+  retrievalNotes.push(
+    "Ordering is deterministic for stable output and is not valuation ranking."
+  );
+
+  return {
+    path: `/rest/v1/valuation_ready_comparables?${params.toString()}`,
+    filtersApplied,
+    retrievalNotes,
+    variantBehavior
+  };
 }
 
-function toValuationReadyComparable(
-  row: ValuationReadyComparableRow
-): ValuationReadyComparable {
+function determineVariantMatch(
+  row: ValuationReadyComparableRow,
+  query: ComparableCandidateQuery,
+  variantBehavior: VariantRetrievalBehavior
+): VariantMatch {
+  if (variantBehavior === "ignore_variant") {
+    return "not_evaluated";
+  }
+  if (!query.target.variantId) {
+    return "missing_target_variant";
+  }
+  if (!row.variant_id) {
+    return "missing_candidate_variant";
+  }
+  return row.variant_id === query.target.variantId ? "exact" : "different";
+}
+
+function calculateYearDelta(
+  row: ValuationReadyComparableRow,
+  query: ComparableCandidateQuery
+): number | null {
+  if (query.target.yearBuilt === null || query.target.yearBuilt === undefined) {
+    return null;
+  }
+  if (row.year_built === null) {
+    return null;
+  }
+
+  return row.year_built - query.target.yearBuilt;
+}
+
+function determineYearMatchBucket(yearDelta: number | null): YearMatchBucket {
+  if (yearDelta === null) {
+    return "unknown";
+  }
+  if (yearDelta === 0) {
+    return "exact";
+  }
+  if (Math.abs(yearDelta) <= NEAR_YEAR_DELTA) {
+    return "near";
+  }
+  return yearDelta < 0 ? "older" : "newer";
+}
+
+function toComparableCandidate(
+  row: ValuationReadyComparableRow,
+  query: ComparableCandidateQuery,
+  variantBehavior: VariantRetrievalBehavior
+): ComparableCandidate {
+  const yearDelta = calculateYearDelta(row, query);
+
   return {
     comparableId: row.comparable_id,
     boatId: row.boat_id,
@@ -265,7 +383,10 @@ function toValuationReadyComparable(
     variantId: row.variant_id,
     canonicalVariant: row.canonical_variant,
     yearBuilt: row.year_built,
-    yearMatchBucket: row.year_match_bucket,
+    yearMatchBucket:
+      query.target.yearBuilt === null || query.target.yearBuilt === undefined
+        ? row.year_match_bucket
+        : determineYearMatchBucket(yearDelta),
     ownershipStatusCode: row.ownership_status_code,
     askingPrice: toNumberOrNull(row.asking_price),
     currency: row.currency,
@@ -285,7 +406,9 @@ function toValuationReadyComparable(
     comparableEligible: row.comparable_eligible,
     exclusionReason: row.exclusion_reason,
     recencyBucket: row.recency_bucket,
-    duplicateSignal: row.duplicate_signal
+    duplicateSignal: row.duplicate_signal,
+    variantMatch: determineVariantMatch(row, query, variantBehavior),
+    yearDelta
   };
 }
 
@@ -337,17 +460,24 @@ export function createSupabaseRestQueryLayer(
     },
     valuationReady: {
       async listComparableCandidates(query) {
+        const queryPlan = buildComparableCandidatesQueryPlan(query);
         const rows = await requestJson<ValuationReadyComparableRow[]>(
           config,
-          buildComparableCandidatesPath(query),
+          queryPlan.path,
           {
             method: "GET"
           }
         );
+        const candidates = rows.map((row) =>
+          toComparableCandidate(row, query, queryPlan.variantBehavior)
+        );
 
         return {
           target: query.target,
-          candidates: rows.map(toValuationReadyComparable)
+          candidates,
+          returnedCount: candidates.length,
+          filtersApplied: queryPlan.filtersApplied,
+          retrievalNotes: queryPlan.retrievalNotes
         };
       }
     }
@@ -368,7 +498,10 @@ export function createUnconfiguredQueryLayer(): QueryLayer {
       async listComparableCandidates(query) {
         return {
           target: query.target,
-          candidates: []
+          candidates: [],
+          returnedCount: 0,
+          filtersApplied: [],
+          retrievalNotes: ["Valuation-ready repository is not configured."]
         };
       }
     }

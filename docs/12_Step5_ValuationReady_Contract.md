@@ -440,3 +440,194 @@ Mapping pravila:
 - `data_quality_score`, `country_code`, `location_region_id` i slicni nezreli signali ne dobivaju fake vrijednosti
 
 Step 5D ce formalnije definirati retrieval filter behavior, a Step 5E scoring contract. Scoring formule ostaju izvan Step 5C.
+
+## 20. Step 5D implementation status
+Step 5D implementira prve basic comparable retrieval rules u data-access sloju.
+
+Aktivna metoda ostaje:
+
+`ValuationReadyRepository.listComparableCandidates(query)`
+
+Metoda i dalje cita samo:
+
+`public.valuation_ready_comparables`
+
+Ne cita direktno:
+- `raw_listings`
+- `boats`
+- `listings`
+- druge normalized tablice
+
+## 21. Step 5D retrieval rules
+Obavezni filteri:
+- `comparable_eligible = true`
+- `publication_status = published`
+- `listing_status = active`
+- `price_eur is not null`
+- same `builder_id`
+- same `model_id`
+
+Optional filteri:
+- `variant_id` se filtrira samo kad je `variantBehavior = exact_variant_only` ili legacy `includeVariantOnly = true`
+- `maxYearDelta` se primjenjuje samo kad caller eksplicitno posalje `maxYearDelta` i target ima `yearBuilt`
+
+Default ne iskljucuje stare listinge samo zbog godine. Stariji listingi ostaju kandidati ako caller ne trazi `maxYearDelta`.
+
+## 22. Step 5D variant behavior
+Default behavior:
+
+`prefer_variant_match`
+
+To znaci:
+- query ne odbacuje candidate samo zato sto variant nije isti
+- candidate dobiva `variantMatch` metadata
+- variant metadata nije score i nije ranking formula
+
+`variantMatch` moze biti:
+- `exact`
+- `different`
+- `missing_target_variant`
+- `missing_candidate_variant`
+- `not_evaluated`
+
+Ako caller trazi `exact_variant_only`, tada se primjenjuje `variant_id = target.variantId` filter.
+
+## 23. Step 5D year behavior
+Ako target ima `yearBuilt`, data-access racuna:
+- `yearDelta`
+- per-target `yearMatchBucket`
+
+Bucketi:
+- `exact`
+- `near`
+- `older`
+- `newer`
+- `unknown`
+- `not_evaluated`
+
+Ovo nije scoring. `yearDelta` i `yearMatchBucket` su retrieval metadata za buduci scoring/explanation.
+
+Ako caller posalje `maxYearDelta`, query smije filtrirati candidate po godini. Bez tog eksplicitnog filtera stariji listingi se ne izbacuju.
+
+## 24. Step 5D result metadata
+`ComparableCandidateResult` sada vraca:
+- `target`
+- `candidates`
+- `returnedCount`
+- `filtersApplied`
+- `retrievalNotes`
+
+Ovo je minimalna retrieval metadata, ne explanation engine.
+
+## 25. Step 5D deterministic ordering
+Ordering ostaje deterministicki:
+- `last_seen_at desc`
+- `first_seen_at desc`
+- `listing_id asc`
+
+Step 5D ne sortira po valuation scoreu, confidenceu, geography weightu, recency weightu ili price-range logici.
+
+Step 5E ostaje scoring contract only, ne final formula.
+
+## 26. Mandatory future retrieval tiers: cross-builder / spec-similar comparables
+Step 5D aktivno implementira samo prvi sigurni retrieval tier. To nije finalna YPI comparison strategija.
+
+Cross-builder / spec-similar comparison je mandatory future retrieval funkcionalnost. Nije opcionalna ideja, ali nije aktivna u Step 5D.
+
+### Tier 1 - same builder + same model
+Status:
+- active now in Step 5D
+- najsigurniji prvi comparable set
+- koristi isti `builder_id` i isti `model_id`
+
+Ovaj tier je potreban, ali nije dovoljan za finalni valuation engine.
+
+### Tier 2 - same builder + related model/variant
+Status:
+- mandatory future behavior
+- not active in Step 5D
+
+Primjeri:
+- model refresh
+- closely related variant
+- adjacent model length unutar istog buildera
+
+Preduvjet:
+- reliable model-family / related-model / variant relation data
+- dokumentirana pravila zasto su modeli povezani
+
+### Tier 3 - different builder + same segment/spec profile
+Status:
+- mandatory future behavior
+- not active in Step 5D
+
+Primjer:
+- `Beneteau Oceanis 45` vs `Jeanneau Sun Odyssey 449`
+- slicno kao `Peugeot 208` vs `Renault Clio` u car-market usporedbi
+
+Ovaj tier trazi structured spec similarity, ne samo slicnu cijenu ili godinu.
+
+### Tier 4 - broader market fallback
+Status:
+- mandatory future behavior
+- not active in Step 5D
+
+Svrha:
+- siri category / market context kad exact i related comparables nisu dovoljni
+- fallback uz nizi confidence
+- uvijek mora biti jasno oznacen i objasnjen
+
+## 27. Future fields required for cross-builder retrieval
+Cross-builder/spec-similar retrieval ne smije biti implementiran dok dovoljno ovih polja nije pouzdano normalizirano:
+- LOA / length
+- beam
+- boat type/category
+- cabins
+- berths
+- heads if available
+- engine count / engine power / propulsion signal
+- ownership/use profile: private, charter, ex-charter
+- `year_built`
+- geography/location bucket
+- condition/equipment/refit signals when available
+- `price_eur`
+- source reliability and data quality signals
+
+Ako ta polja nisu dovoljno popunjena i pouzdana, cross-builder retrieval bi proizvodio laznu preciznost.
+
+## 28. Future implementation gate for cross-builder retrieval
+Cross-builder/spec-similar retrieval je obavezna buduca funkcionalnost, ali je blokirana dok valuation-ready sloj ne sadrzi dovoljno pouzdane structured spec podatke.
+
+Gate je zadovoljen tek kad:
+- required spec fields postoje u normalized ili valuation-ready podacima
+- pipeline ili source data ih pune s prihvatljivom pouzdanoscu
+- docs definiraju kako se similarity objasnjava korisniku
+- testovi dokazuju da cross-builder kandidati nisu odabrani samo zato sto su godina i cijena slicne
+- scoring/confidence logic moze razlikovati exact-model, related-model, spec-similar i broad-market fallback candidates
+
+Dok gate nije zadovoljen, active retrieval ostaje same-builder / same-model.
+
+## 29. Cross-builder safety rule
+Ne usporeduj razlicite buildere/modele samo zato sto su cijena i godina slicne.
+
+Cross-builder candidate mora biti objasnjiv kroz:
+- physical/spec similarity
+- use-case similarity
+- market/geography similarity
+- source/data quality support
+
+Ako se ti razlozi ne mogu prikazati, candidate ne smije biti tretiran kao sigurni comparable.
+
+## 30. Future scoring boundary for broader retrieval
+Cross-builder retrieval nije isto sto i scoring.
+
+Buduci retrieval smije ukljuciti sire candidates, ali kasniji scoring/confidence odlucuje koliko tezine oni nose.
+
+Pravila:
+- exact same-model candidates obicno nose najjaci confidence
+- related-model candidates moraju biti oznaceni kao related
+- cross-builder/spec-similar candidates moraju imati jasnu spec-similarity osnovu
+- broad-market fallback candidates obicno nose nizi confidence
+- future valuation explanation mora jasno labelirati retrieval tier
+
+Step 5D ne implementira ovaj siri retrieval. Ovaj dodatak samo cuva obavezni future direction.

@@ -191,7 +191,10 @@ export interface WorkerNoteRecord {
 
 export type YearMatchBucket =
   | "exact"
+  | "near"
   | "nearby"
+  | "older"
+  | "newer"
   | "fallback"
   | "unknown"
   | "not_evaluated";
@@ -217,6 +220,18 @@ export type DuplicateSignal =
   | "duplicate_clustered"
   | "unknown"
   | "not_evaluated";
+
+export type VariantMatch =
+  | "exact"
+  | "different"
+  | "missing_target_variant"
+  | "missing_candidate_variant"
+  | "not_evaluated";
+
+export type VariantRetrievalBehavior =
+  | "prefer_variant_match"
+  | "exact_variant_only"
+  | "ignore_variant";
 
 export interface ValuationReadyComparable {
   comparableId: string;
@@ -259,6 +274,11 @@ export interface ValuationReadyComparable {
 
 export type ValuationComparable = ValuationReadyComparable;
 
+export interface ComparableCandidate extends ValuationReadyComparable {
+  variantMatch: VariantMatch;
+  yearDelta: number | null;
+}
+
 export interface TargetBoatInput {
   builderId: string;
   modelId: string;
@@ -270,10 +290,15 @@ export interface TargetBoatInput {
 export interface ComparableCandidateQuery {
   target: TargetBoatInput;
   includeVariantOnly?: boolean;
+  variantBehavior?: VariantRetrievalBehavior;
+  maxYearDelta?: number;
   limit?: number;
 }
 
 export interface ComparableCandidateResult {
   target: TargetBoatInput;
-  candidates: ValuationReadyComparable[];
+  candidates: ComparableCandidate[];
+  returnedCount: number;
+  filtersApplied: string[];
+  retrievalNotes: string[];
 }
