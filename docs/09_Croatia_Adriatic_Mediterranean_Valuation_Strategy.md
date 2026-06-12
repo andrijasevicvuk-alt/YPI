@@ -138,8 +138,10 @@ Retrieval tierovi koje scoring/confidence kasnije mora jasno razlikovati:
 - cross-builder / spec-similar comparables
 - broad market fallback comparables
 
-Cross-builder/spec-similar comparables su mandatory future retrieval funkcionalnost, ali nisu aktivni u Step 5D. Oni smiju uci u buduci retrieval tek kad postoje pouzdani structured spec fields, npr. LOA, beam, boat category, cabin layout, ownership/use profile, engine/spec profile, geography bucket i quality/source signali.
+Cross-builder/spec-similar comparables su mandatory future retrieval funkcionalnost, ali nisu aktivni u Step 5D/5E. Oni smiju uci u buduci retrieval tek kad postoje pouzdani structured spec fields, npr. LOA, beam, boat category, cabin layout, ownership/use profile, engine/spec profile, geography bucket i quality/source signali.
 
 Geografija ostaje Croatia -> Slovenia -> Adriatic -> Mediterranean market anchor, ali spec-similarity tier mora biti zasebno objasnjen. Slicna cijena i godina nisu dovoljni razlozi za cross-builder comparison.
 
-Ove smjernice služe da Step 4 pripremi podatke i signalne atribute, a Step 5 kasnije može provesti scoring i confidence pravila bez promjene arhitekture.
+Step 5E definira samo scoring contract/stub. Ne implementira geography weighting, recency weighting, confidence model, ranking ni valuation range.
+
+Ove smjernice služe da Step 4 pripremi podatke i signalne atribute, a kasniji scoring/confidence rad moze provesti pravila bez promjene arhitekture.

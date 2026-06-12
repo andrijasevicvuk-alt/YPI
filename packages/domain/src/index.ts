@@ -302,3 +302,95 @@ export interface ComparableCandidateResult {
   filtersApplied: string[];
   retrievalNotes: string[];
 }
+
+export type ComparableRetrievalTier =
+  | "same_builder_same_model"
+  | "same_builder_related_model"
+  | "cross_builder_spec_similar"
+  | "broad_market_fallback"
+  | "not_evaluated";
+
+export type ComparableScoringMode =
+  | "contract_only"
+  | "future_weighted_scoring";
+
+export type ComparableScoringStatus =
+  | "not_scored";
+
+export type ValuationRangeStatus =
+  | "not_calculated";
+
+export interface ComparableScoreBreakdown {
+  overallScore: null;
+  confidenceScore: null;
+  retrievalTierScore: null;
+  variantScore: null;
+  yearScore: null;
+  geographyScore: null;
+  recencyScore: null;
+  ownershipScore: null;
+  sourceReliabilityScore: null;
+  dataQualityScore: null;
+  duplicatePenalty: null;
+  outlierPenalty: null;
+}
+
+export interface ComparableScoringExplanation {
+  status: ComparableScoringStatus;
+  notes: string[];
+  futureDimensions: string[];
+}
+
+export interface ComparableScoringCandidate {
+  candidate: ComparableCandidate;
+  retrievalTier: ComparableRetrievalTier;
+  variantMatch: VariantMatch;
+  yearDelta: number | null;
+  yearMatchBucket: YearMatchBucket;
+  geographyBucket: GeographyBucket;
+  recencyBucket: RecencyBucket;
+  sourceReliabilityScore: number | null;
+  dataQualityScore: number | null;
+  duplicateSignal: DuplicateSignal;
+  scoringStatus: ComparableScoringStatus;
+  score: null;
+  confidence: null;
+  rank: null;
+  breakdown: ComparableScoreBreakdown;
+  explanation: ComparableScoringExplanation;
+}
+
+export interface ComparableScoringInput {
+  target: TargetBoatInput;
+  candidates: ComparableCandidate[];
+  returnedCount: number;
+  filtersApplied: string[];
+  retrievalNotes: string[];
+  scoringMode?: ComparableScoringMode;
+}
+
+export interface ValuationRangeInput {
+  target: TargetBoatInput;
+  scoredCandidates: ComparableScoringCandidate[];
+}
+
+export interface ValuationRangeResult {
+  status: ValuationRangeStatus;
+  minPriceEur: null;
+  maxPriceEur: null;
+  estimatedPriceEur: null;
+  confidence: null;
+  explanationNotes: string[];
+}
+
+export interface ComparableScoringResult {
+  target: TargetBoatInput;
+  candidates: ComparableScoringCandidate[];
+  returnedCount: number;
+  filtersApplied: string[];
+  retrievalNotes: string[];
+  scoringMode: ComparableScoringMode;
+  scoringStatus: ComparableScoringStatus;
+  valuationRange: ValuationRangeResult;
+  explanationNotes: string[];
+}

@@ -631,3 +631,89 @@ Pravila:
 - future valuation explanation mora jasno labelirati retrieval tier
 
 Step 5D ne implementira ovaj siri retrieval. Ovaj dodatak samo cuva obavezni future direction.
+
+## 31. Step 5E implementation status
+Step 5E definira scoring input/output contract i minimalni scoring package stub.
+
+Aktivna funkcija:
+
+`scoreComparableCandidates(input)`
+
+Ulaz prima:
+- target boat input
+- retrieved comparable candidates iz valuation-ready retrieval sloja
+- retrieval metadata: `returnedCount`, `filtersApplied`, `retrievalNotes`
+- optional `scoringMode`
+
+Izlaz vraca:
+- iste candidates, istim redoslijedom kao retrieval
+- `scoringStatus = not_scored`
+- `score = null`
+- `confidence = null`
+- `rank = null`
+- placeholder `breakdown` s null vrijednostima
+- `valuationRange.status = not_calculated`
+- explanation notes koji jasno kazu da scoring nije implementiran
+
+Step 5E ne implementira:
+- scoring formulu
+- ranking formulu
+- numeric valuation score
+- confidence calculation
+- valuation range calculation
+- price estimate
+- geography weighting
+- recency weighting
+- cross-builder active retrieval
+- scraping
+- search/comparison UI
+
+## 32. Step 5E domain contracts
+Domain sloj sada definira contract tipove za buduci scoring:
+- `ComparableScoringInput`
+- `ComparableScoringCandidate`
+- `ComparableScoringResult`
+- `ComparableScoreBreakdown`
+- `ComparableScoringExplanation`
+- `ComparableRetrievalTier`
+- `ComparableScoringMode`
+- `ComparableScoringStatus`
+- `ValuationRangeInput`
+- `ValuationRangeResult`
+
+Ovi tipovi postoje da buduci scoring moze raditi nad `ComparableCandidate` payloadom bez citanja raw ili normalized tablica.
+
+## 33. Step 5E future scoring dimensions
+Future scoring moze konceptualno koristiti:
+- retrieval tier: exact model, related model, cross-builder/spec-similar, broad market fallback
+- variant match
+- year distance
+- geography closeness: Croatia -> Slovenia -> Adriatic -> Mediterranean
+- recency/staleness
+- ownership status
+- source reliability
+- data quality
+- duplicate/cluster signal
+- price outlier handling
+
+Step 5E ne dodjeljuje weights za ove dimenzije. Svaka numeric formula ostaje future work.
+
+## 34. Step 5E cross-builder boundary
+Cross-builder/spec-similar comparables ostaju mandatory future functionality, ali nisu aktivni u Step 5E.
+
+Buduci scoring mora razlikovati:
+- exact same-model candidates
+- related-model candidates
+- cross-builder/spec-similar candidates
+- broad-market fallback candidates
+
+Same-builder/same-model retrieval nije finalna YPI comparison strategija. Step 5E samo priprema contract tako da se ti tierovi kasnije mogu oznaciti i objasniti bez promjene osnovnog boundaryja.
+
+## 35. Step 5F next task
+Step 5F treba verificirati i zatvoriti minimalni Step 5 data path:
+- TypeScript typecheck
+- Step 4 pipeline regression tests
+- valuation-ready SQL smoke check kad je lokalni Supabase dostupan
+- confirmation da data-access cita valuation-ready view
+- confirmation da scoring package ne racuna score, rank, confidence ni valuation range
+- docs moraju jasno odvojiti implemented contract od future scoring implementacije
